@@ -123,7 +123,7 @@ class UserFlowSimulationTests(unittest.TestCase):
         def fake_run_cmd(args, check=False):
             calls.append(tuple(args))
             if args[:3] == ['findmnt', '-n', '-o']:
-                return ('/media/root/Titash', '', 0)
+                return ('/media/root/wd-volume', '', 0)
             if args[:1] == ['umount']:
                 return ('', '', 0)
             if args[:1] == ['mount']:
