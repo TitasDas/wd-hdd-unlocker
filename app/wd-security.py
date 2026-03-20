@@ -578,36 +578,43 @@ class WDSecurityWindow:
 
     def unlock_drive(self, payload_path):
         try:
-            sg_dev = self.find_sg_for_partname()
+            candidates = []
 
-            if not sg_dev:
-                # Fallback to dmesg scan if sysfs mapping is unavailable.
-                sg_devices = self.find_sg_devices()
-                if not sg_devices:
-                    self.show_error('Device Error', "Could not find an sg 'type 13' device for the WD drive.")
-                    return
+            mapped_sg = self.find_sg_for_partname()
+            if mapped_sg:
+                candidates.append(mapped_sg)
+                self.append_log('Mapped WD block device /dev/' + PARTNAME + ' to /dev/' + mapped_sg)
 
-                if len(sg_devices) > 1:
-                    self.show_error(
-                        'Device Conflict',
-                        'Found multiple SCSI type-13 devices and could not map uniquely to the WD drive. '
-                        'Reconnect only the target WD drive and retry.'
-                    )
-                    return
+            # Include type-13 fallbacks for environments where sysfs mapping is incomplete.
+            for sg in self.find_sg_devices():
+                if sg not in candidates:
+                    candidates.append(sg)
 
-                sg_dev = sg_devices[0]
-                self.append_log('Fallback device detection selected /dev/' + sg_dev)
-            else:
-                self.append_log('Mapped WD block device /dev/' + PARTNAME + ' to /dev/' + sg_dev)
+            if not candidates:
+                self.show_error('Device Error', "Could not find an sg 'type 13' device for the WD drive.")
+                return
 
-            self.append_log('Secure hard drive identified at /dev/' + sg_dev)
+            self.append_log('Unlock candidates: ' + ', '.join('/dev/' + sg for sg in candidates))
 
-            cmd = ['sg_raw', '-s', '40', '-i', payload_path, '/dev/' + sg_dev] + SCSI_UNLOCK_CMD
-            try:
-                run_cmd(cmd, check=True)
-                self.append_log('The WD drive is now unlocked and can be mounted!')
-            except subprocess.CalledProcessError:
-                self.show_error('Unlock Failed', 'SCSI decrypt command failed. Check password and connections.')
+            unlock_ok = False
+            last_detail = ''
+            for sg_dev in candidates:
+                self.append_log('Trying unlock on /dev/' + sg_dev + '...')
+                cmd = ['sg_raw', '-s', '40', '-i', payload_path, '/dev/' + sg_dev] + SCSI_UNLOCK_CMD
+                out, err, rc = run_cmd(cmd)
+                if rc == 0:
+                    self.append_log('Secure hard drive identified at /dev/' + sg_dev)
+                    self.append_log('The WD drive is now unlocked and can be mounted!')
+                    unlock_ok = True
+                    break
+
+                detail = (err or out or ('exit code ' + str(rc))).replace('\n', ' ').strip()
+                last_detail = detail
+                self.append_log('Unlock attempt failed on /dev/' + sg_dev + ': ' + detail)
+
+            if not unlock_ok:
+                detail_msg = (' Details: ' + last_detail) if last_detail else ''
+                self.show_error('Unlock Failed', 'SCSI decrypt command failed. Check password and connections.' + detail_msg)
                 return
 
             self.set_state('MOUNT')
