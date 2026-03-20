@@ -29,6 +29,33 @@ Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIM
 3. Run `./scripts/install-desktop-entry.sh`.
 4. Launch **WD My Passport Linux Unlocker**.
 
+## Compatibility Reporting (Help Improve Model Support)
+This tool supports many WD devices, but USB bridge chips and firmware vary across models.
+If unlock fails, share diagnostics so model-specific endpoint rules can be improved.
+
+### What to submit
+1. Distro + version
+2. Kernel version: `uname -r`
+3. WD model label (as printed on device)
+4. App log (last 40 lines from **Status & Activity**)
+5. Command outputs:
+   - `lsusb`
+   - `lsusb -v -d 1058:`
+   - `udevadm info --query=property --name /dev/sdX`
+   - `udevadm info --query=property --name /dev/sgY`
+   - `lsblk -o NAME,MODEL,SERIAL,TRAN,TYPE,SIZE`
+
+Replace `sdX` and `sgY` with names shown in app logs.
+
+### Privacy note
+Please redact serial numbers, personal mount paths, and host/user identifiers before sharing.
+
+### Where to report
+Open a GitHub issue titled:
+`Compatibility report: <model> on <distro>`
+
+Suggested labels: `compatibility`, `model-support`, `unlock-failure`.
+
 ## Credits
 - Original upstream: https://github.com/KenMacD/wdpassport-utils
 - GUI lineage includes work by: https://github.com/electronicsguy
