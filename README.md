@@ -2,13 +2,10 @@
 
 Linux desktop utility for unlocking compatible WD Security-protected drives and mounting them.
 
-## Credits
-- Original upstream: https://github.com/KenMacD/wdpassport-utils
-- GUI lineage includes work by: https://github.com/electronicsguy
+## Screenshots
+Screenshots will be added from live app captures.
 
-See [NOTICE](NOTICE) for attribution and [LICENSE](LICENSE) for rights.
-
-## What it does
+## What You Can Do
 - Unlock a WD Security-protected drive using your password.
 - Mount the drive after unlock.
 - Run from terminal or desktop launcher.
@@ -19,7 +16,11 @@ See [NOTICE](NOTICE) for attribution and [LICENSE](LICENSE) for rights.
 3. Run `./install-desktop-entry.sh`.
 4. Launch **WD Security Unlocker**.
 
-## Policy Files
-- [TERMS](TERMS.md)
-- [SECURITY](SECURITY.md)
-- [CONTRIBUTING](CONTRIBUTING.md)
+## Credits
+- Original upstream: https://github.com/KenMacD/wdpassport-utils
+- GUI lineage includes work by: https://github.com/electronicsguy
+
+See [NOTICE](NOTICE) for attribution and [LICENSE](LICENSE) for rights.
+
+## Canary
+`CANARY:WDSU:20260320:R2B9K1`
