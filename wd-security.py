@@ -335,21 +335,17 @@ class WDSecurityWindow:
         stamp = datetime.now().strftime('%H:%M:%S')
         self.message_box.append(f'[{stamp}] {msg}')
 
-    @pyqtSlot(int)
     def toggle_password_visibility(self, state):
         mode = QLineEdit.Normal if state == Qt.Checked else QLineEdit.Password
         self.pw_box.setEchoMode(mode)
 
-    @pyqtSlot()
     def clear_logs(self):
         self.message_box.clear()
         self.set_state('READY')
 
-    @pyqtSlot(str)
     def pw_box_text_changed(self, text):
         self.decrypt_btn.setEnabled(bool(text))
 
-    @pyqtSlot()
     def pw_box_check_text(self):
         if self.pw_box.text():
             self.decrypt_wd()
