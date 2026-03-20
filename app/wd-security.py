@@ -643,27 +643,31 @@ class WDSecurityWindow:
                     if sg not in candidates:
                         candidates.append(sg)
 
+            # Some bridges reject vendor commands on /dev/sgX but accept SG_IO on /dev/sdX.
+            if PARTNAME and PARTNAME not in candidates:
+                candidates.append(PARTNAME)
+
             if not candidates:
-                self.show_error('Device Error', "Could not find an sg 'type 13' device for the WD drive.")
+                self.show_error('Device Error', "Could not find a candidate device node for the WD drive.")
                 return
 
-            self.append_log('Unlock candidates: ' + ', '.join('/dev/' + sg for sg in candidates))
+            self.append_log('Unlock candidates: ' + ', '.join('/dev/' + dev for dev in candidates))
 
             unlock_ok = False
             last_detail = ''
-            for sg_dev in candidates:
-                self.append_log('Trying unlock on /dev/' + sg_dev + '...')
-                cmd = ['sg_raw', '-s', '40', '-i', payload_path, '/dev/' + sg_dev] + SCSI_UNLOCK_CMD
+            for dev in candidates:
+                self.append_log('Trying unlock on /dev/' + dev + '...')
+                cmd = ['sg_raw', '-s', '40', '-i', payload_path, '/dev/' + dev] + SCSI_UNLOCK_CMD
                 out, err, rc = run_cmd(cmd)
                 if rc == 0:
-                    self.append_log('Secure hard drive identified at /dev/' + sg_dev)
+                    self.append_log('Secure hard drive identified at /dev/' + dev)
                     self.append_log('The WD drive is now unlocked and can be mounted!')
                     unlock_ok = True
                     break
 
                 detail = (err or out or ('exit code ' + str(rc))).replace('\n', ' ').strip()
                 last_detail = detail
-                self.append_log('Unlock attempt failed on /dev/' + sg_dev + ': ' + detail)
+                self.append_log('Unlock attempt failed on /dev/' + dev + ': ' + detail)
 
             if not unlock_ok:
                 hint = ''
