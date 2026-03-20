@@ -1,4 +1,4 @@
-# What You Should Have Picked Up From Linux
+# Linux based notes
 
 ## 1) Linux exposes hardware through multiple interfaces
 - One physical drive can appear as `/dev/sdX` and `/dev/sgX`.
