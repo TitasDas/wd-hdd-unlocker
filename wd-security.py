@@ -537,18 +537,60 @@ class WDSecurityWindow:
                 devices.append(match.group(1))
         return sorted(set(devices))
 
+    def find_sg_for_partname(self):
+        """Map detected WD block device (sdX) to matching sgX device."""
+        global PARTNAME
+
+        self.get_partname()
+        if not PARTNAME:
+            return None
+
+        # Preferred path: /sys/block/sdX/device/scsi_generic/sgY
+        sg_dir = os.path.join('/sys/block', PARTNAME, 'device', 'scsi_generic')
+        if os.path.isdir(sg_dir):
+            sgs = sorted([n for n in os.listdir(sg_dir) if re.match(r'^sg\d+$', n)])
+            if sgs:
+                return sgs[0]
+
+        # Fallback: reverse mapping from sg -> block device.
+        sys_sg_root = '/sys/class/scsi_generic'
+        if os.path.isdir(sys_sg_root):
+            for sg in sorted(os.listdir(sys_sg_root)):
+                if not re.match(r'^sg\d+$', sg):
+                    continue
+                block_dir = os.path.join(sys_sg_root, sg, 'device', 'block')
+                if not os.path.isdir(block_dir):
+                    continue
+                block_devices = os.listdir(block_dir)
+                if PARTNAME in block_devices:
+                    return sg
+
+        return None
+
     def unlock_drive(self, payload_path):
         try:
-            sg_devices = self.find_sg_devices()
-            if not sg_devices:
-                self.show_error('Device Error', "Could not find an sg 'type 13' device in dmesg.")
-                return
+            sg_dev = self.find_sg_for_partname()
 
-            if len(sg_devices) > 1:
-                self.show_error('Device Conflict', "Multiple SCSI 'type 13' devices recognized. Unplug others and retry.")
-                return
+            if not sg_dev:
+                # Fallback to dmesg scan if sysfs mapping is unavailable.
+                sg_devices = self.find_sg_devices()
+                if not sg_devices:
+                    self.show_error('Device Error', "Could not find an sg 'type 13' device for the WD drive.")
+                    return
 
-            sg_dev = sg_devices[0]
+                if len(sg_devices) > 1:
+                    self.show_error(
+                        'Device Conflict',
+                        'Found multiple SCSI type-13 devices and could not map uniquely to the WD drive. '
+                        'Reconnect only the target WD drive and retry.'
+                    )
+                    return
+
+                sg_dev = sg_devices[0]
+                self.append_log('Fallback device detection selected /dev/' + sg_dev)
+            else:
+                self.append_log('Mapped WD block device /dev/' + PARTNAME + ' to /dev/' + sg_dev)
+
             self.append_log('Secure hard drive identified at /dev/' + sg_dev)
 
             cmd = ['sg_raw', '-s', '40', '-i', payload_path, '/dev/' + sg_dev] + SCSI_UNLOCK_CMD
