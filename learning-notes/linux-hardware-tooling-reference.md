@@ -64,7 +64,7 @@
 - freedesktop Desktop Entry Spec: https://specifications.freedesktop.org/desktop-entry-spec/latest/
 - freedesktop Icon Theme Spec: https://specifications.freedesktop.org/icon-theme-spec/latest/
 
-## Practical Mindset
+## Mindset based takeaway
 - Treat Linux app + hardware work as systems engineering.
 - Prefer correctness and observability over clever shortcuts.
 - Build safe defaults first, then optimize UX.
