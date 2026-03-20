@@ -597,12 +597,13 @@ class WDSecurityWindow:
         QMessageBox.information(
             self.frame,
             'Disclaimer',
-            'This utility enables temporary unlock for modern WD drives that support '
-            'hardware-level link encryption.\nIt does not support permanent unlock '
-            '(removing security) or initial locking.\n\nThis utility is not '
-            'officially licensed by Western Digital.\n\nThis utility has only been '
-            'tested with one WD locked drive attached.\nPlease do not connect more '
-            'than one locked USB drive.'
+            'Unofficial community utility. Not affiliated with or endorsed by '
+            'Western Digital.\n\nUse only on drives you own or are explicitly '
+            'authorized to access.\n\nThis utility enables temporary unlock for '
+            'compatible WD Security drives and does not support permanent '
+            'security removal.\n\nUse at your own risk. Always keep backups before '
+            'using disk/security tools.\n\nFor safest operation, connect only one '
+            'WD locked drive at a time.'
         )
 
 

@@ -2,6 +2,8 @@
 
 Linux desktop utility for unlocking compatible WD Security-protected drives and mounting them.
 
+Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIMER](DISCLAIMER.md).
+
 ## Screenshots
 ### Light Mode - Main
 ![Light mode main](assets/screenshot-light-main.png)
@@ -30,7 +32,16 @@ Linux desktop utility for unlocking compatible WD Security-protected drives and 
 - Original upstream: https://github.com/KenMacD/wdpassport-utils
 - GUI lineage includes work by: https://github.com/electronicsguy
 
-See [NOTICE](NOTICE) for attribution and [LICENSE](LICENSE) for rights.
+Core docs:
+- [NOTICE](NOTICE)
+- [LICENSE](LICENSE)
+- [TERMS](TERMS.md)
+- [LEGAL_USE](LEGAL_USE.md)
+- [TRADEMARKS](TRADEMARKS.md)
+- [SECURITY](SECURITY.md)
+- [CONTRIBUTING](CONTRIBUTING.md)
+- [SAFETY](SAFETY.md)
+- [RELEASE_CHECKLIST](RELEASE_CHECKLIST.md)
 
 ## Canary
 `CANARY:WDSU:20260320:R2B9K1`
