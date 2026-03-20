@@ -1,6 +1,7 @@
 # WD Security Unlocker
 
 Linux desktop utility for unlocking compatible WD Security-protected drives and mounting them.
+If you use WD My Passport drives on Linux and get stuck with a locked drive, this helps you unlock and mount it with a simple desktop app and CLI flow. It is aimed at Linux users who need practical access to their own WD-encrypted external drives.
 
 Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIMER](DISCLAIMER.md).
 
