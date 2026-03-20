@@ -637,13 +637,18 @@ class WDSecurityWindow:
         # If already mounted, avoid re-mount attempts.
         mounted_at, _, findmnt_rc = run_cmd(['findmnt', '-n', '-o', 'TARGET', '--source', devname])
         if findmnt_rc == 0 and mounted_at.strip():
-            self.set_state('DONE')
-            self.append_log('Drive is already mounted at: ' + mounted_at.strip())
-            self.mount_btn.setEnabled(False)
-            return
+            if os.path.isdir(mounted_at.strip()):
+                self.set_state('DONE')
+                self.append_log('Drive is already mounted at: ' + mounted_at.strip())
+                self.mount_btn.setEnabled(False)
+                return
+            self.append_log('Mounted target is invalid: ' + mounted_at.strip() + '. Re-mounting to a safe path...')
+            run_cmd(['umount', devname])
 
         # Primary path: direct mount to avoid desktop auto-open popups on some environments.
         mount_dir = '/mnt/wd-security-' + PARTNAME
+        if os.path.exists(mount_dir) and not os.path.isdir(mount_dir):
+            mount_dir = '/mnt/wd-security-' + PARTNAME + '-mount'
         run_cmd(['mkdir', '-p', mount_dir])
         _, _, direct_rc = run_cmd(['mount', devname, mount_dir])
 
@@ -656,8 +661,13 @@ class WDSecurityWindow:
         # Fallback for environments where direct mount is restricted.
         _, _, mount_rc = run_cmd(['udisksctl', 'mount', '-b', devname, '--no-user-interaction'])
         if mount_rc == 0:
-            self.set_state('DONE')
-            self.append_log('WD hard drive decrypted and mounted successfully!')
+            mounted_at, _, findmnt_rc = run_cmd(['findmnt', '-n', '-o', 'TARGET', '--source', devname])
+            if findmnt_rc == 0 and mounted_at.strip() and os.path.isdir(mounted_at.strip()):
+                self.set_state('DONE')
+                self.append_log('WD hard drive decrypted and mounted successfully at: ' + mounted_at.strip())
+            else:
+                self.set_state('WARN')
+                self.append_log('Drive mounted but target path is invalid in the desktop view. Use /mnt/wd-security-' + PARTNAME)
         else:
             self.set_state('WARN')
             self.append_log('Drive decrypted, but automount failed. Mount manually if needed.')
@@ -685,7 +695,7 @@ def prompt_sudo():
 
 
 def check_required_utils():
-    required_bins = ['sg_raw', 'partprobe', 'lsusb', 'lsblk', 'findmnt', 'mount']
+    required_bins = ['sg_raw', 'partprobe', 'lsusb', 'lsblk', 'findmnt', 'mount', 'umount', 'udisksctl']
     missing = [binary for binary in required_bins if not is_executable_available(binary)]
     if missing:
         print(f"Missing required system tools: {', '.join(missing)}")
