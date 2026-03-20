@@ -32,6 +32,96 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKPW_PATH = os.path.join(SCRIPT_DIR, 'cookpw.py')
 SCSI_UNLOCK_CMD = ['c1', 'e1', '00', '00', '00', '00', '00', '00', '28', '00']
 
+LIGHT_STYLE = '''
+QFrame#rootFrame { background-color: #eef2f6; }
+QFrame#headerCard {
+    border-radius: 12px;
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0f2a44, stop: 1 #0b1f33);
+}
+QLabel#titleLabel { color: #ffffff; font-size: 28px; font-weight: 700; }
+QLabel#subtitleLabel { color: #c9d7ea; font-size: 13px; }
+QLabel#chipLabel, QLabel#stateChip {
+    border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+    border: 1px solid #c2d5f0; background: #e2ecf9; color: #153a63;
+}
+QFrame#panelCard {
+    border: 1px solid #dce3ec;
+    border-radius: 10px;
+    background: #ffffff;
+}
+QLabel#sectionTitle { color: #102d4d; font-size: 14px; font-weight: 700; }
+QLabel#fieldLabel { color: #26435f; font-size: 12px; font-weight: 600; }
+QLineEdit {
+    border: 1px solid #b8c6d8; border-radius: 8px; padding: 8px 10px;
+    background: #ffffff; color: #20374f;
+}
+QLineEdit:focus { border: 1px solid #2e5e92; background: #fafcff; }
+QCheckBox { color: #26435f; }
+QPushButton { border-radius: 8px; padding: 9px 14px; font-weight: 600; }
+QPushButton#primaryBtn { background: #1f4f82; color: #ffffff; }
+QPushButton#primaryBtn:hover { background: #1b456f; }
+QPushButton#primaryBtn:pressed { background: #173a5d; }
+QPushButton#secondaryBtn { background: #5f7898; color: #ffffff; }
+QPushButton#secondaryBtn:hover { background: #526a89; }
+QPushButton#secondaryBtn:pressed { background: #465b77; }
+QPushButton#neutralBtn { background: #eff3f8; color: #2a4864; border: 1px solid #ced9e6; }
+QPushButton#neutralBtn:hover { background: #e4ebf4; }
+QPushButton#neutralBtn:pressed { background: #d9e3ef; }
+QPushButton#dangerBtn { background: #b84a4a; color: #ffffff; }
+QPushButton#dangerBtn:hover { background: #a44141; }
+QPushButton#dangerBtn:pressed { background: #8e3737; }
+QPushButton:disabled { background: #c5ced9; color: #eef2f8; }
+QTextEdit {
+    border: 1px solid #d5dee8; border-radius: 8px;
+    background: #fcfdfe; color: #20374f; padding: 8px;
+}
+'''
+
+DARK_STYLE = '''
+QFrame#rootFrame { background-color: #0f141b; }
+QFrame#headerCard {
+    border-radius: 12px;
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #16355d, stop: 1 #0b1f35);
+}
+QLabel#titleLabel { color: #f3f7ff; font-size: 28px; font-weight: 700; }
+QLabel#subtitleLabel { color: #b9cde8; font-size: 13px; }
+QLabel#chipLabel, QLabel#stateChip {
+    border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+    border: 1px solid #37557a; background: #1a2c43; color: #dbeaff;
+}
+QFrame#panelCard {
+    border: 1px solid #2a3644;
+    border-radius: 10px;
+    background: #171f29;
+}
+QLabel#sectionTitle { color: #e8eef9; font-size: 14px; font-weight: 700; }
+QLabel#fieldLabel { color: #d2dfef; font-size: 12px; font-weight: 600; }
+QLineEdit {
+    border: 1px solid #45586f; border-radius: 8px; padding: 8px 10px;
+    background: #101722; color: #e7eef9;
+}
+QLineEdit:focus { border: 1px solid #5e8fca; background: #111d2c; }
+QCheckBox { color: #c7d7ea; }
+QPushButton { border-radius: 8px; padding: 9px 14px; font-weight: 600; }
+QPushButton#primaryBtn { background: #2b6cb2; color: #ffffff; }
+QPushButton#primaryBtn:hover { background: #255f9c; }
+QPushButton#primaryBtn:pressed { background: #205283; }
+QPushButton#secondaryBtn { background: #4f6785; color: #eef5ff; }
+QPushButton#secondaryBtn:hover { background: #445b77; }
+QPushButton#secondaryBtn:pressed { background: #3a4f68; }
+QPushButton#neutralBtn { background: #233344; color: #d9e8fb; border: 1px solid #39526c; }
+QPushButton#neutralBtn:hover { background: #273c52; }
+QPushButton#neutralBtn:pressed { background: #203246; }
+QPushButton#dangerBtn { background: #a84a4a; color: #ffffff; }
+QPushButton#dangerBtn:hover { background: #934141; }
+QPushButton#dangerBtn:pressed { background: #7e3737; }
+QPushButton:disabled { background: #2b3643; color: #7d8ea3; }
+QTextEdit {
+    border: 1px solid #334354; border-radius: 8px;
+    background: #101722; color: #dce7f5; padding: 8px;
+}
+'''
+
 
 def run_cmd(args, check=False):
     proc = subprocess.run(args, capture_output=True, text=True)
@@ -49,87 +139,14 @@ def is_executable_available(binary):
 class WDSecurityWindow:
     def setup_ui(self, frame):
         self.frame = frame
+        self.current_theme = 'light'
+        self.current_state = 'READY'
+
         frame.setObjectName('rootFrame')
         frame.resize(900, 640)
         frame.setMinimumSize(780, 560)
         frame.setFrameShape(QFrame.StyledPanel)
         frame.setFrameShadow(QFrame.Raised)
-        frame.setStyleSheet('''
-            QFrame#rootFrame {
-                background-color: #eef2f6;
-            }
-            QFrame#headerCard {
-                border-radius: 12px;
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 #0f2a44,
-                    stop: 1 #0b1f33
-                );
-            }
-            QLabel#titleLabel {
-                color: #ffffff;
-                font-size: 28px;
-                font-weight: 700;
-            }
-            QLabel#subtitleLabel {
-                color: #c9d7ea;
-                font-size: 13px;
-            }
-            QLabel#chipLabel,
-            QLabel#stateChip {
-                border-radius: 10px;
-                padding: 4px 10px;
-                font-size: 11px;
-                font-weight: 700;
-                border: 1px solid #c2d5f0;
-                background: #e2ecf9;
-                color: #153a63;
-            }
-            QFrame#panelCard {
-                border: 1px solid #dce3ec;
-                border-radius: 10px;
-                background: #ffffff;
-            }
-            QLabel#sectionTitle {
-                color: #102d4d;
-                font-size: 14px;
-                font-weight: 700;
-            }
-            QLabel#fieldLabel {
-                color: #26435f;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            QLineEdit {
-                border: 1px solid #b8c6d8;
-                border-radius: 8px;
-                padding: 8px 10px;
-                background: #ffffff;
-                color: #20374f;
-            }
-            QLineEdit:focus {
-                border: 1px solid #2e5e92;
-                background: #fafcff;
-            }
-            QPushButton {
-                border-radius: 8px;
-                padding: 9px 14px;
-                font-weight: 600;
-            }
-            QPushButton#primaryBtn {
-                background: #1f4f82;
-                color: #ffffff;
-            }
-            QPushButton#primaryBtn:hover { background: #1b456f; }
-            QPushButton#primaryBtn:pressed { background: #173a5d; }
-            QTextEdit {
-                border: 1px solid #d5dee8;
-                border-radius: 8px;
-                padding: 8px;
-                background: #fcfdfe;
-                color: #20374f;
-            }
-        ''')
 
         main_layout = QVBoxLayout(frame)
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -201,12 +218,14 @@ class WDSecurityWindow:
         self.decrypt_btn.setToolTip('Unlock drive (Alt+U)')
 
         self.mount_btn = QPushButton('Mount Drive')
+        self.mount_btn.setObjectName('secondaryBtn')
         self.mount_btn.setEnabled(False)
         self.mount_btn.clicked.connect(self.mount_wd)
         self.mount_btn.setShortcut('Alt+M')
         self.mount_btn.setToolTip('Mount drive (Alt+M)')
 
         self.exit_btn = QPushButton('Exit')
+        self.exit_btn.setObjectName('dangerBtn')
         self.exit_btn.clicked.connect(frame.close)
         self.exit_btn.setToolTip('Close app (Esc)')
 
@@ -238,6 +257,7 @@ class WDSecurityWindow:
         self.state_chip.setMinimumWidth(92)
 
         self.clear_log_btn = QPushButton('Clear')
+        self.clear_log_btn.setObjectName('neutralBtn')
         self.clear_log_btn.clicked.connect(self.clear_logs)
         self.clear_log_btn.setShortcut('Ctrl+L')
         self.clear_log_btn.setToolTip('Clear log (Ctrl+L)')
@@ -261,10 +281,21 @@ class WDSecurityWindow:
 
         # Footer
         footer_layout = QHBoxLayout()
+
+        self.theme_btn = QPushButton('Dark Mode')
+        self.theme_btn.setObjectName('neutralBtn')
+        self.theme_btn.setCheckable(True)
+        self.theme_btn.setToolTip('Toggle dark mode')
+        self.theme_btn.clicked.connect(self.toggle_theme)
+        self.theme_btn.setMinimumHeight(34)
+
         self.disclaimer_btn = QPushButton('Disclaimer')
+        self.disclaimer_btn.setObjectName('neutralBtn')
         self.disclaimer_btn.clicked.connect(self.show_disclaimer)
         self.disclaimer_btn.setToolTip('Open disclaimer (F1)')
         self.disclaimer_btn.setMinimumHeight(34)
+
+        footer_layout.addWidget(self.theme_btn)
         footer_layout.addWidget(self.disclaimer_btn)
         footer_layout.addStretch(1)
         main_layout.addLayout(footer_layout)
@@ -278,7 +309,8 @@ class WDSecurityWindow:
         frame.setTabOrder(self.show_pw_check, self.decrypt_btn)
         frame.setTabOrder(self.decrypt_btn, self.mount_btn)
         frame.setTabOrder(self.mount_btn, self.clear_log_btn)
-        frame.setTabOrder(self.clear_log_btn, self.disclaimer_btn)
+        frame.setTabOrder(self.clear_log_btn, self.theme_btn)
+        frame.setTabOrder(self.theme_btn, self.disclaimer_btn)
         frame.setTabOrder(self.disclaimer_btn, self.exit_btn)
 
         self.apply_texts(frame)
@@ -292,7 +324,26 @@ class WDSecurityWindow:
     def apply_texts(self, frame):
         frame.setWindowTitle('WD Security for Linux')
         self.decrypt_btn.setEnabled(False)
+        self.apply_theme('light')
         self.set_state('READY')
+
+    def apply_theme(self, theme_name):
+        self.current_theme = theme_name
+        if theme_name == 'dark':
+            self.frame.setStyleSheet(DARK_STYLE)
+            self.theme_btn.setText('Light Mode')
+            self.theme_btn.setChecked(True)
+        else:
+            self.frame.setStyleSheet(LIGHT_STYLE)
+            self.theme_btn.setText('Dark Mode')
+            self.theme_btn.setChecked(False)
+        self.set_state(self.current_state)
+
+    def toggle_theme(self):
+        if self.current_theme == 'light':
+            self.apply_theme('dark')
+        else:
+            self.apply_theme('light')
 
     def show_error(self, title, message):
         self.set_state('ERROR')
@@ -301,9 +352,10 @@ class WDSecurityWindow:
 
     def set_state(self, value):
         state = value.upper()
+        self.current_state = state
         self.state_chip.setText(state)
 
-        palette = {
+        light_palette = {
             'READY': ('#e7edf5', '#17395a', '#c9d6e6'),
             'WORKING': ('#fff3dc', '#724500', '#f4d6a4'),
             'MOUNT': ('#e9edf3', '#244566', '#cfd9e5'),
@@ -313,6 +365,18 @@ class WDSecurityWindow:
             'WAITING': ('#e9edf3', '#244566', '#cfd9e5'),
             'CHECK': ('#e9edf3', '#244566', '#cfd9e5'),
         }
+        dark_palette = {
+            'READY': ('#1d324a', '#dbeaff', '#2f4b69'),
+            'WORKING': ('#4e3f1f', '#ffe7ad', '#6b5730'),
+            'MOUNT': ('#253546', '#dbe7f7', '#374b61'),
+            'DONE': ('#20402b', '#d7f4df', '#336447'),
+            'WARN': ('#4e3f1f', '#ffe7ad', '#6b5730'),
+            'ERROR': ('#4b2626', '#ffd6d6', '#6a3838'),
+            'WAITING': ('#253546', '#dbe7f7', '#374b61'),
+            'CHECK': ('#253546', '#dbe7f7', '#374b61'),
+        }
+
+        palette = dark_palette if self.current_theme == 'dark' else light_palette
         bg, fg, bd = palette.get(state, palette['READY'])
         self.state_chip.setStyleSheet(
             f'color: {fg}; background: {bg}; border: 1px solid {bd}; border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 700;'
@@ -356,7 +420,7 @@ class WDSecurityWindow:
         lsblk_out, _, _ = run_cmd(['lsblk'])
         if 'wd unlocker' not in lsblk_out.lower():
             self.set_state('CHECK')
-            self.append_log("Drive may already be unlocked or not WD Security compatible.")
+            self.append_log('Drive may already be unlocked or not WD Security compatible.')
             self.append_log('Reconnect the disk and try again if needed.')
             self.pw_box.setEnabled(False)
             return
