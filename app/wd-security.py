@@ -533,18 +533,27 @@ class WDSecurityWindow:
         self.unlock_drive(payload_path)
 
     def find_sg_devices(self):
-        out, _, rc = run_cmd(['/bin/dmesg'])
-        if rc != 0:
+        """Return currently connected SCSI generic devices of type 13 (enclosure services)."""
+        sys_sg_root = '/sys/class/scsi_generic'
+        if not os.path.isdir(sys_sg_root):
             return []
 
         devices = []
-        for line in out.splitlines():
-            if 'type 13' not in line:
+        for sg in sorted(os.listdir(sys_sg_root)):
+            if not re.match(r'^sg\d+$', sg):
                 continue
-            match = re.search(r'\b(sg\d+)\b', line)
-            if match:
-                devices.append(match.group(1))
-        return sorted(set(devices))
+
+            type_path = os.path.join(sys_sg_root, sg, 'device', 'type')
+            try:
+                with open(type_path, 'r', encoding='utf-8') as fh:
+                    scsi_type = fh.read().strip()
+            except OSError:
+                continue
+
+            if scsi_type == '13':
+                devices.append(sg)
+
+        return devices
 
     def find_sg_for_partname(self):
         """Map detected WD block device (sdX) to matching sgX device."""
@@ -749,7 +758,7 @@ def prompt_sudo():
 
 
 def check_required_utils():
-    required_bins = ['sg_raw', 'partprobe', 'lsusb', 'lsblk', 'findmnt', 'mount', 'umount', 'udisksctl']
+    required_bins = ['sg_raw', 'partprobe', 'lsusb', 'lsblk', 'findmnt', 'mount', 'umount', 'udisksctl', 'udevadm']
     missing = [binary for binary in required_bins if not is_executable_available(binary)]
     if missing:
         print(f"Missing required system tools: {', '.join(missing)}")
