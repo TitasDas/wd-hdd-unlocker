@@ -1,17 +1,13 @@
-# Terms of Use (Repository Content)
+# Terms of Use
 
-These terms apply to this repository's **original modifications** by the repository owner.
-They do not alter rights of upstream/base code referenced in `NOTICE`.
+These terms apply to original modifications in this repository.
+They do not override rights of upstream/base code referenced in `NOTICE`.
 
-## Prohibited Without Prior Written Permission
+## Not allowed without prior written permission
 - Commercial use
 - Redistribution
 - Derivative works based on these modifications
-- Use of repository content for AI model training, fine-tuning, synthetic data generation, or dataset creation
-- Automated scraping, bulk harvesting, or crawling for reuse
+- Use of content for AI model training, fine-tuning, or dataset creation
+- Automated scraping or bulk harvesting for reuse
 
-## No Implied Permission
-Public visibility of this repository does not grant permission for reuse beyond what is explicitly stated in `LICENSE` and this file.
-
-## Enforcement
-Unauthorized use may result in access restriction requests, takedown requests, and legal enforcement where applicable.
+Public visibility of this repository does not grant reuse rights beyond `LICENSE` and this file.

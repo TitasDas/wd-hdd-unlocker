@@ -1,15 +1,11 @@
 # Contributing
 
-This repository is owner-maintained.
+This is an owner-maintained repository.
 
-## External Contributions
-- Pull requests are not accepted by default.
-- Do not submit code or derivative builds for redistribution without prior written permission.
+Pull requests are not accepted by default.
 
-## Issue Reporting
-Bug reports and compatibility reports are welcome.
-Please include:
-- Linux distribution and version
-- Desktop environment (X11/Wayland)
+If you report a bug, include:
+- Linux distro and version
+- X11 or Wayland
 - Steps to reproduce
 - Relevant launcher log output
