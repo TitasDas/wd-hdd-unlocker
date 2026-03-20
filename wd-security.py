@@ -56,13 +56,13 @@ class WDSecurityWindow:
         frame.setFrameShadow(QFrame.Raised)
         frame.setStyleSheet('''
             QFrame#rootFrame {
-                background-color: #edf2f8;
+                background-color: #eef2f6;
             }
             QFrame#headerCard {
                 background: qlineargradient(
                     x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 #17365f,
-                    stop: 1 #0f2745
+                    stop: 0 #0f2a44,
+                    stop: 1 #0b1f33
                 );
                 border-radius: 14px;
             }
@@ -72,21 +72,21 @@ class WDSecurityWindow:
                 font-weight: 700;
             }
             QLabel#subtitleLabel {
-                color: #d8e6fb;
+                color: #c9d7ea;
                 font-size: 13px;
             }
             QLabel#chipLabel {
-                color: #0f2745;
-                background: #dbe8f9;
+                color: #0b1f33;
+                background: #d7e4f5;
                 border-radius: 10px;
                 padding: 4px 10px;
                 font-size: 11px;
                 font-weight: 600;
             }
             QLabel#stateChip {
-                color: #11461f;
-                background: #dff5e6;
-                border: 1px solid #b9e5c8;
+                color: #153a63;
+                background: #e2ecf9;
+                border: 1px solid #c2d5f0;
                 border-radius: 10px;
                 padding: 4px 12px;
                 font-size: 11px;
@@ -94,32 +94,32 @@ class WDSecurityWindow:
             }
             QFrame#panelCard {
                 background: #ffffff;
-                border: 1px solid #d6dfea;
+                border: 1px solid #dce3ec;
                 border-radius: 12px;
             }
             QLabel#sectionTitle {
-                color: #12325c;
+                color: #102d4d;
                 font-size: 15px;
                 font-weight: 700;
             }
             QLabel#fieldLabel {
-                color: #203957;
+                color: #26435f;
                 font-size: 12px;
                 font-weight: 600;
             }
             QLineEdit {
-                border: 1px solid #aebfd7;
+                border: 1px solid #b8c6d8;
                 border-radius: 8px;
                 padding: 10px 12px;
                 font-size: 13px;
                 background: #ffffff;
             }
             QLineEdit:focus {
-                border: 1px solid #2d6fb4;
-                background: #f9fcff;
+                border: 1px solid #2e5e92;
+                background: #fafcff;
             }
             QCheckBox {
-                color: #274267;
+                color: #36516d;
                 font-size: 12px;
             }
             QPushButton {
@@ -130,44 +130,44 @@ class WDSecurityWindow:
                 font-weight: 600;
             }
             QPushButton#primaryBtn {
-                background: #1d5fa9;
+                background: #1f4f82;
                 color: #ffffff;
             }
-            QPushButton#primaryBtn:hover { background: #1a548f; }
-            QPushButton#primaryBtn:pressed { background: #164877; }
+            QPushButton#primaryBtn:hover { background: #1b456f; }
+            QPushButton#primaryBtn:pressed { background: #173a5d; }
 
             QPushButton#secondaryBtn {
-                background: #3e6ea8;
+                background: #5f7898;
                 color: #ffffff;
             }
-            QPushButton#secondaryBtn:hover { background: #355f90; }
-            QPushButton#secondaryBtn:pressed { background: #2e537d; }
+            QPushButton#secondaryBtn:hover { background: #526a89; }
+            QPushButton#secondaryBtn:pressed { background: #465b77; }
 
             QPushButton#neutralBtn {
-                background: #eef3fb;
-                color: #21416a;
-                border: 1px solid #c8d5e8;
+                background: #eff3f8;
+                color: #2a4864;
+                border: 1px solid #ced9e6;
             }
-            QPushButton#neutralBtn:hover { background: #e4edf9; }
-            QPushButton#neutralBtn:pressed { background: #d8e5f6; }
+            QPushButton#neutralBtn:hover { background: #e4ebf4; }
+            QPushButton#neutralBtn:pressed { background: #d9e3ef; }
 
             QPushButton#dangerBtn {
-                background: #d84f4f;
+                background: #b84a4a;
                 color: #ffffff;
             }
-            QPushButton#dangerBtn:hover { background: #bf4444; }
-            QPushButton#dangerBtn:pressed { background: #a93a3a; }
+            QPushButton#dangerBtn:hover { background: #a44141; }
+            QPushButton#dangerBtn:pressed { background: #8e3737; }
 
             QPushButton:disabled {
-                background: #b8c3d2;
+                background: #c5ced9;
                 color: #eef2f8;
             }
             QTextEdit {
-                border: 1px solid #d0d9e6;
+                border: 1px solid #d5dee8;
                 border-radius: 8px;
-                background: #fbfdff;
+                background: #fcfdfe;
                 padding: 8px;
-                color: #1b2f4d;
+                color: #20374f;
                 line-height: 1.3;
             }
         ''')
@@ -313,7 +313,23 @@ class WDSecurityWindow:
         self.set_state('READY')
 
     def set_state(self, value):
-        self.state_chip.setText(value.upper())
+        state = value.upper()
+        self.state_chip.setText(state)
+
+        palette = {
+            "READY": ("#e2ecf9", "#153a63", "#c2d5f0"),
+            "WORKING": ("#fff4dc", "#7a4b00", "#ffd9a2"),
+            "MOUNT": ("#e9eff8", "#1f4168", "#ccd8ea"),
+            "DONE": ("#e4f5e8", "#1f5f34", "#c4e6cf"),
+            "WARN": ("#fff1dc", "#7a4b00", "#ffd9a2"),
+            "ERROR": ("#fbe5e5", "#7a1f1f", "#efc2c2"),
+            "WAITING": ("#e9eff8", "#1f4168", "#ccd8ea"),
+            "CHECK": ("#e9eff8", "#1f4168", "#ccd8ea"),
+        }
+        bg, fg, bd = palette.get(state, palette["READY"])
+        self.state_chip.setStyleSheet(
+            f"color: {fg}; background: {bg}; border: 1px solid {bd}; border-radius: 10px; padding: 4px 12px; font-size: 11px; font-weight: 700;"
+        )
 
     def append_log(self, msg):
         stamp = datetime.now().strftime('%H:%M:%S')
