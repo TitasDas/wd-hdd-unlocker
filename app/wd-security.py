@@ -687,6 +687,44 @@ class WDSecurityWindow:
             except OSError:
                 pass
 
+    def try_open_mount_path(self, mount_path):
+        if not mount_path or not os.path.isdir(mount_path):
+            return False
+
+        open_attempts = []
+
+        desktop_uid = os.environ.get('PKEXEC_UID')
+        sudo_user = os.environ.get('SUDO_USER')
+
+        if desktop_uid and is_executable_available('sudo'):
+            open_attempts.extend([
+                ['sudo', '-u', '#' + desktop_uid, 'xdg-open', mount_path],
+                ['sudo', '-u', '#' + desktop_uid, 'gio', 'open', mount_path],
+            ])
+        elif sudo_user and is_executable_available('sudo'):
+            open_attempts.extend([
+                ['sudo', '-u', sudo_user, 'xdg-open', mount_path],
+                ['sudo', '-u', sudo_user, 'gio', 'open', mount_path],
+            ])
+
+        open_attempts.extend([
+            ['xdg-open', mount_path],
+            ['gio', 'open', mount_path],
+        ])
+
+        for cmd in open_attempts:
+            if not is_executable_available(cmd[0]):
+                continue
+            _, err, rc = run_cmd(cmd)
+            if rc == 0:
+                self.append_log('Opened mounted folder: ' + mount_path)
+                return True
+            if err:
+                self.append_log('Open attempt failed (' + ' '.join(cmd[:2]) + '): ' + err)
+
+        self.append_log('Could not auto-open mounted folder. Open manually: ' + mount_path)
+        return False
+
     def mount_wd(self):
         global PARTNAME
 
@@ -707,6 +745,7 @@ class WDSecurityWindow:
             if os.path.isdir(mounted_at.strip()):
                 self.set_state('DONE')
                 self.append_log('Drive is already mounted at: ' + mounted_at.strip())
+                self.try_open_mount_path(mounted_at.strip())
                 self.mount_btn.setEnabled(False)
                 return
             self.append_log('Mounted target is invalid: ' + mounted_at.strip() + '. Re-mounting to a safe path...')
@@ -722,6 +761,7 @@ class WDSecurityWindow:
         if direct_rc == 0:
             self.set_state('DONE')
             self.append_log('WD hard drive decrypted and mounted successfully at: ' + mount_dir)
+            self.try_open_mount_path(mount_dir)
             self.mount_btn.setEnabled(False)
             return
 
@@ -732,6 +772,7 @@ class WDSecurityWindow:
             if findmnt_rc == 0 and mounted_at.strip() and os.path.isdir(mounted_at.strip()):
                 self.set_state('DONE')
                 self.append_log('WD hard drive decrypted and mounted successfully at: ' + mounted_at.strip())
+                self.try_open_mount_path(mounted_at.strip())
             else:
                 self.set_state('WARN')
                 self.append_log('Drive mounted but target path is invalid in the desktop view. Use /mnt/wd-security-' + PARTNAME)
