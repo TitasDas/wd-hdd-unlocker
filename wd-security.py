@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 #
 # WD Security unlock helper for Linux
-# Modernized to Python3 + PyQt5.
 
 import os
 import re
@@ -11,8 +10,8 @@ import sys
 import tempfile
 from datetime import datetime
 
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFontDatabase, QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -23,6 +22,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QShortcut,
     QTextEdit,
     QVBoxLayout,
 )
@@ -55,131 +55,76 @@ class WDSecurityWindow:
         frame.setFrameShape(QFrame.StyledPanel)
         frame.setFrameShadow(QFrame.Raised)
         frame.setStyleSheet('''
-            QFrame#rootFrame {
-                background-color: #eef2f6;
-            }
+            QFrame#rootFrame { background-color: palette(window); }
             QFrame#headerCard {
-                background: qlineargradient(
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 #0f2a44,
-                    stop: 1 #0b1f33
-                );
-                border-radius: 14px;
+                border-radius: 12px;
+                background: palette(dark);
             }
             QLabel#titleLabel {
-                color: #ffffff;
-                font-size: 30px;
+                color: palette(bright-text);
+                font-size: 28px;
                 font-weight: 700;
             }
             QLabel#subtitleLabel {
-                color: #c9d7ea;
+                color: palette(light);
                 font-size: 13px;
             }
-            QLabel#chipLabel {
-                color: #0b1f33;
-                background: #d7e4f5;
+            QLabel#chipLabel,
+            QLabel#stateChip {
                 border-radius: 10px;
                 padding: 4px 10px;
                 font-size: 11px;
-                font-weight: 600;
-            }
-            QLabel#stateChip {
-                color: #153a63;
-                background: #e2ecf9;
-                border: 1px solid #c2d5f0;
-                border-radius: 10px;
-                padding: 4px 12px;
-                font-size: 11px;
                 font-weight: 700;
+                border: 1px solid palette(mid);
+                background: palette(base);
+                color: palette(text);
             }
             QFrame#panelCard {
-                background: #ffffff;
-                border: 1px solid #dce3ec;
-                border-radius: 12px;
+                border: 1px solid palette(midlight);
+                border-radius: 10px;
+                background: palette(base);
             }
             QLabel#sectionTitle {
-                color: #102d4d;
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 700;
             }
             QLabel#fieldLabel {
-                color: #26435f;
                 font-size: 12px;
                 font-weight: 600;
             }
             QLineEdit {
-                border: 1px solid #b8c6d8;
+                border: 1px solid palette(mid);
                 border-radius: 8px;
-                padding: 10px 12px;
-                font-size: 13px;
-                background: #ffffff;
+                padding: 8px 10px;
             }
             QLineEdit:focus {
-                border: 1px solid #2e5e92;
-                background: #fafcff;
-            }
-            QCheckBox {
-                color: #36516d;
-                font-size: 12px;
+                border: 1px solid palette(highlight);
             }
             QPushButton {
-                border: 0;
                 border-radius: 8px;
-                padding: 10px 14px;
-                font-size: 13px;
+                padding: 9px 14px;
                 font-weight: 600;
             }
             QPushButton#primaryBtn {
-                background: #1f4f82;
-                color: #ffffff;
-            }
-            QPushButton#primaryBtn:hover { background: #1b456f; }
-            QPushButton#primaryBtn:pressed { background: #173a5d; }
-
-            QPushButton#secondaryBtn {
-                background: #5f7898;
-                color: #ffffff;
-            }
-            QPushButton#secondaryBtn:hover { background: #526a89; }
-            QPushButton#secondaryBtn:pressed { background: #465b77; }
-
-            QPushButton#neutralBtn {
-                background: #eff3f8;
-                color: #2a4864;
-                border: 1px solid #ced9e6;
-            }
-            QPushButton#neutralBtn:hover { background: #e4ebf4; }
-            QPushButton#neutralBtn:pressed { background: #d9e3ef; }
-
-            QPushButton#dangerBtn {
-                background: #b84a4a;
-                color: #ffffff;
-            }
-            QPushButton#dangerBtn:hover { background: #a44141; }
-            QPushButton#dangerBtn:pressed { background: #8e3737; }
-
-            QPushButton:disabled {
-                background: #c5ced9;
-                color: #eef2f8;
+                background: palette(highlight);
+                color: palette(highlighted-text);
             }
             QTextEdit {
-                border: 1px solid #d5dee8;
+                border: 1px solid palette(midlight);
                 border-radius: 8px;
-                background: #fcfdfe;
                 padding: 8px;
-                color: #20374f;
-                line-height: 1.3;
             }
         ''')
 
         main_layout = QVBoxLayout(frame)
-        main_layout.setContentsMargins(22, 22, 22, 22)
-        main_layout.setSpacing(14)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
+        # Header
         header_card = QFrame()
         header_card.setObjectName('headerCard')
         header_layout = QHBoxLayout(header_card)
-        header_layout.setContentsMargins(18, 16, 18, 16)
+        header_layout.setContentsMargins(16, 14, 16, 14)
 
         title_group = QVBoxLayout()
         self.title_label = QLabel('WD Security Unlocker')
@@ -198,18 +143,19 @@ class WDSecurityWindow:
         header_layout.addWidget(self.chip_label, 0, Qt.AlignTop)
         main_layout.addWidget(header_card)
 
+        # Controls
         controls_card = QFrame()
         controls_card.setObjectName('panelCard')
         controls_layout = QVBoxLayout(controls_card)
-        controls_layout.setContentsMargins(16, 14, 16, 14)
-        controls_layout.setSpacing(12)
+        controls_layout.setContentsMargins(14, 12, 14, 12)
+        controls_layout.setSpacing(10)
 
         controls_title = QLabel('Drive Access')
         controls_title.setObjectName('sectionTitle')
         controls_layout.addWidget(controls_title)
 
         form_layout = QGridLayout()
-        form_layout.setHorizontalSpacing(12)
+        form_layout.setHorizontalSpacing(10)
         form_layout.setVerticalSpacing(8)
 
         self.pw_label = QLabel('Password')
@@ -218,6 +164,8 @@ class WDSecurityWindow:
         self.pw_box = QLineEdit()
         self.pw_box.setEchoMode(QLineEdit.Password)
         self.pw_box.setPlaceholderText('Enter password to unlock WD drive')
+        self.pw_box.setAccessibleName('Drive password input')
+        self.pw_box.setToolTip('Password used to unlock the connected WD drive')
 
         self.show_pw_check = QCheckBox('Show password')
         self.show_pw_check.stateChanged.connect(self.toggle_password_visibility)
@@ -229,23 +177,26 @@ class WDSecurityWindow:
         controls_layout.addLayout(form_layout)
 
         action_layout = QHBoxLayout()
-        action_layout.setSpacing(10)
+        action_layout.setSpacing(8)
 
         self.decrypt_btn = QPushButton('Unlock Drive')
         self.decrypt_btn.setObjectName('primaryBtn')
         self.decrypt_btn.clicked.connect(self.decrypt_wd)
+        self.decrypt_btn.setShortcut('Alt+U')
+        self.decrypt_btn.setToolTip('Unlock drive (Alt+U)')
 
         self.mount_btn = QPushButton('Mount Drive')
-        self.mount_btn.setObjectName('secondaryBtn')
         self.mount_btn.setEnabled(False)
         self.mount_btn.clicked.connect(self.mount_wd)
+        self.mount_btn.setShortcut('Alt+M')
+        self.mount_btn.setToolTip('Mount drive (Alt+M)')
 
         self.exit_btn = QPushButton('Exit')
-        self.exit_btn.setObjectName('dangerBtn')
         self.exit_btn.clicked.connect(frame.close)
+        self.exit_btn.setToolTip('Close app (Esc)')
 
         for btn in (self.decrypt_btn, self.mount_btn, self.exit_btn):
-            btn.setMinimumHeight(42)
+            btn.setMinimumHeight(40)
 
         action_layout.addWidget(self.decrypt_btn)
         action_layout.addWidget(self.mount_btn)
@@ -255,11 +206,12 @@ class WDSecurityWindow:
 
         main_layout.addWidget(controls_card)
 
+        # Status
         status_card = QFrame()
         status_card.setObjectName('panelCard')
         status_layout = QVBoxLayout(status_card)
-        status_layout.setContentsMargins(16, 14, 16, 14)
-        status_layout.setSpacing(10)
+        status_layout.setContentsMargins(14, 12, 14, 12)
+        status_layout.setSpacing(8)
 
         status_header = QHBoxLayout()
         status_title = QLabel('Status & Activity')
@@ -268,13 +220,14 @@ class WDSecurityWindow:
         self.state_chip = QLabel('READY')
         self.state_chip.setObjectName('stateChip')
         self.state_chip.setAlignment(Qt.AlignCenter)
-        self.state_chip.setMinimumWidth(85)
+        self.state_chip.setMinimumWidth(92)
 
         self.clear_log_btn = QPushButton('Clear')
-        self.clear_log_btn.setObjectName('neutralBtn')
         self.clear_log_btn.clicked.connect(self.clear_logs)
+        self.clear_log_btn.setShortcut('Ctrl+L')
+        self.clear_log_btn.setToolTip('Clear log (Ctrl+L)')
         self.clear_log_btn.setMinimumHeight(34)
-        self.clear_log_btn.setMinimumWidth(82)
+        self.clear_log_btn.setMinimumWidth(84)
 
         status_header.addWidget(status_title)
         status_header.addStretch(1)
@@ -286,18 +239,32 @@ class WDSecurityWindow:
         self.message_box.setReadOnly(True)
         self.message_box.setMinimumHeight(220)
         self.message_box.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.message_box.setAccessibleName('Status log output')
         status_layout.addWidget(self.message_box)
 
         main_layout.addWidget(status_card, 1)
 
+        # Footer
         footer_layout = QHBoxLayout()
         self.disclaimer_btn = QPushButton('Disclaimer')
-        self.disclaimer_btn.setObjectName('neutralBtn')
-        self.disclaimer_btn.setMinimumHeight(36)
         self.disclaimer_btn.clicked.connect(self.show_disclaimer)
+        self.disclaimer_btn.setToolTip('Open disclaimer (F1)')
+        self.disclaimer_btn.setMinimumHeight(34)
         footer_layout.addWidget(self.disclaimer_btn)
         footer_layout.addStretch(1)
         main_layout.addLayout(footer_layout)
+
+        # Global shortcuts
+        QShortcut(QKeySequence('Esc'), frame, activated=frame.close)
+        QShortcut(QKeySequence('F1'), frame, activated=self.show_disclaimer)
+
+        # Keyboard tab order
+        frame.setTabOrder(self.pw_box, self.show_pw_check)
+        frame.setTabOrder(self.show_pw_check, self.decrypt_btn)
+        frame.setTabOrder(self.decrypt_btn, self.mount_btn)
+        frame.setTabOrder(self.mount_btn, self.clear_log_btn)
+        frame.setTabOrder(self.clear_log_btn, self.disclaimer_btn)
+        frame.setTabOrder(self.disclaimer_btn, self.exit_btn)
 
         self.apply_texts(frame)
 
@@ -312,23 +279,28 @@ class WDSecurityWindow:
         self.decrypt_btn.setEnabled(False)
         self.set_state('READY')
 
+    def show_error(self, title, message):
+        self.set_state('ERROR')
+        self.append_log(message)
+        QMessageBox.warning(self.frame, title, message)
+
     def set_state(self, value):
         state = value.upper()
         self.state_chip.setText(state)
 
         palette = {
-            "READY": ("#e2ecf9", "#153a63", "#c2d5f0"),
-            "WORKING": ("#fff4dc", "#7a4b00", "#ffd9a2"),
-            "MOUNT": ("#e9eff8", "#1f4168", "#ccd8ea"),
-            "DONE": ("#e4f5e8", "#1f5f34", "#c4e6cf"),
-            "WARN": ("#fff1dc", "#7a4b00", "#ffd9a2"),
-            "ERROR": ("#fbe5e5", "#7a1f1f", "#efc2c2"),
-            "WAITING": ("#e9eff8", "#1f4168", "#ccd8ea"),
-            "CHECK": ("#e9eff8", "#1f4168", "#ccd8ea"),
+            'READY': ('#e7edf5', '#17395a', '#c9d6e6'),
+            'WORKING': ('#fff3dc', '#724500', '#f4d6a4'),
+            'MOUNT': ('#e9edf3', '#244566', '#cfd9e5'),
+            'DONE': ('#e5f5e9', '#1f5a32', '#c8e5cf'),
+            'WARN': ('#fff3dc', '#724500', '#f4d6a4'),
+            'ERROR': ('#f9e6e6', '#712121', '#ebc7c7'),
+            'WAITING': ('#e9edf3', '#244566', '#cfd9e5'),
+            'CHECK': ('#e9edf3', '#244566', '#cfd9e5'),
         }
-        bg, fg, bd = palette.get(state, palette["READY"])
+        bg, fg, bd = palette.get(state, palette['READY'])
         self.state_chip.setStyleSheet(
-            f"color: {fg}; background: {bg}; border: 1px solid {bd}; border-radius: 10px; padding: 4px 12px; font-size: 11px; font-weight: 700;"
+            f'color: {fg}; background: {bg}; border: 1px solid {bd}; border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 700;'
         )
 
     def append_log(self, msg):
@@ -359,7 +331,7 @@ class WDSecurityWindow:
         if not wd_usb_lines:
             self.set_state('WAITING')
             self.append_log('No Western Digital drive attached.')
-            self.append_log('Please attach a compatible drive and restart.')
+            self.append_log('Attach a compatible drive and restart.')
             self.pw_box.setEnabled(False)
             return
 
@@ -369,8 +341,8 @@ class WDSecurityWindow:
         lsblk_out, _, _ = run_cmd(['lsblk'])
         if 'wd unlocker' not in lsblk_out.lower():
             self.set_state('CHECK')
-            self.append_log("Either the drive is not locked or doesn't support WD security.")
-            self.append_log('If this is wrong, reconnect the disk and try again.')
+            self.append_log("Drive may already be unlocked or not WD Security compatible.")
+            self.append_log('Reconnect the disk and try again if needed.')
             self.pw_box.setEnabled(False)
             return
 
@@ -383,7 +355,7 @@ class WDSecurityWindow:
 
         num_lines = self.get_partname()
         if num_lines == 0:
-            self.append_log('Error locating WD drive. Please reconnect and try again.')
+            self.show_error('Drive Detection Error', 'Could not locate WD drive. Reconnect and retry.')
         elif num_lines == 1:
             self.append_log('Drive appears to be locked.')
         else:
@@ -466,8 +438,7 @@ class WDSecurityWindow:
         try:
             payload_path = self.create_password_blob(password)
         except Exception as exc:
-            self.set_state('ERROR')
-            self.append_log(f'Cannot prepare password payload: {exc}')
+            self.show_error('Payload Error', f'Cannot prepare password payload: {exc}')
             return
 
         self.append_log('Sending SCSI commands to unlock the drive...')
@@ -491,14 +462,11 @@ class WDSecurityWindow:
         try:
             sg_devices = self.find_sg_devices()
             if not sg_devices:
-                self.set_state('ERROR')
-                self.append_log("Failure: couldn't find an sg 'type 13' device in dmesg.")
+                self.show_error('Device Error', "Could not find an sg 'type 13' device in dmesg.")
                 return
 
             if len(sg_devices) > 1:
-                self.set_state('ERROR')
-                self.append_log("Multiple SCSI 'type 13' devices recognized.")
-                self.append_log('Unplug other devices and retry.')
+                self.show_error('Device Conflict', "Multiple SCSI 'type 13' devices recognized. Unplug others and retry.")
                 return
 
             sg_dev = sg_devices[0]
@@ -509,8 +477,7 @@ class WDSecurityWindow:
                 run_cmd(cmd, check=True)
                 self.append_log('The WD drive is now unlocked and can be mounted!')
             except subprocess.CalledProcessError:
-                self.set_state('ERROR')
-                self.append_log('SCSI decrypt command failed. Check password and connections.')
+                self.show_error('Unlock Failed', 'SCSI decrypt command failed. Check password and connections.')
                 return
 
             self.set_state('MOUNT')
@@ -528,8 +495,7 @@ class WDSecurityWindow:
 
         self.get_partname()
         if not PARTNAME:
-            self.set_state('ERROR')
-            self.append_log('Cannot determine drive device name. Please mount manually.')
+            self.show_error('Mount Error', 'Cannot determine drive device name. Mount manually.')
             return
 
         run_cmd(['partprobe'])
@@ -544,9 +510,8 @@ class WDSecurityWindow:
             self.append_log('WD hard drive decrypted and mounted successfully!')
         else:
             self.set_state('WARN')
-            self.append_log('Drive decrypted, but automount failed. Please mount manually.')
+            self.append_log('Drive decrypted, but automount failed. Mount manually if needed.')
 
-        self.append_log('If needed, mount partitions manually using "mount".')
         self.mount_btn.setEnabled(False)
 
     def show_disclaimer(self):
@@ -564,7 +529,7 @@ class WDSecurityWindow:
 
 def prompt_sudo():
     if os.geteuid() != 0:
-        print("This program requires root permissions. Please run with sudo or pkexec.", file=sys.stderr)
+        print('This program requires root permissions. Please run with sudo or pkexec.', file=sys.stderr)
         sys.exit(1)
 
 
