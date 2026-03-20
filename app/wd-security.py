@@ -576,19 +576,63 @@ class WDSecurityWindow:
 
         return None
 
+
+    def get_udev_id_path(self, devnode):
+        try:
+            out, _, rc = run_cmd(['udevadm', 'info', '--query=property', '--name', devnode])
+        except FileNotFoundError:
+            return ''
+        if rc != 0:
+            return ''
+        for line in out.splitlines():
+            if line.startswith('ID_PATH='):
+                return line.split('=', 1)[1].strip()
+        return ''
+
+    def normalize_id_path(self, id_path):
+        if not id_path:
+            return ''
+        if '-scsi-' in id_path:
+            return id_path.split('-scsi-', 1)[0]
+        return id_path
+
+    def find_type13_sg_for_partname(self):
+        global PARTNAME
+
+        self.get_partname()
+        if not PARTNAME:
+            return []
+
+        part_id_path = self.normalize_id_path(self.get_udev_id_path('/dev/' + PARTNAME))
+        if not part_id_path:
+            return []
+
+        matched = []
+        for sg in self.find_sg_devices():
+            sg_id_path = self.normalize_id_path(self.get_udev_id_path('/dev/' + sg))
+            if sg_id_path and sg_id_path == part_id_path:
+                matched.append(sg)
+        return matched
+
     def unlock_drive(self, payload_path):
         try:
             candidates = []
 
+            matched_type13 = self.find_type13_sg_for_partname()
+            if matched_type13:
+                candidates.extend(matched_type13)
+                self.append_log('Matched WD USB path candidates: ' + ', '.join('/dev/' + sg for sg in matched_type13))
+
             mapped_sg = self.find_sg_for_partname()
-            if mapped_sg:
+            if mapped_sg and mapped_sg not in candidates:
                 candidates.append(mapped_sg)
                 self.append_log('Mapped WD block device /dev/' + PARTNAME + ' to /dev/' + mapped_sg)
 
-            # Include type-13 fallbacks for environments where sysfs mapping is incomplete.
-            for sg in self.find_sg_devices():
-                if sg not in candidates:
-                    candidates.append(sg)
+            # Last-resort fallback when path matching is unavailable.
+            if not candidates:
+                for sg in self.find_sg_devices():
+                    if sg not in candidates:
+                        candidates.append(sg)
 
             if not candidates:
                 self.show_error('Device Error', "Could not find an sg 'type 13' device for the WD drive.")
@@ -613,8 +657,11 @@ class WDSecurityWindow:
                 self.append_log('Unlock attempt failed on /dev/' + sg_dev + ': ' + detail)
 
             if not unlock_ok:
+                hint = ''
+                if 'Illegal Request' in last_detail:
+                    hint = ' The selected device endpoint rejected the vendor command; this is usually an interface mismatch or unsupported firmware path.'
                 detail_msg = (' Details: ' + last_detail) if last_detail else ''
-                self.show_error('Unlock Failed', 'SCSI decrypt command failed. Check password and connections.' + detail_msg)
+                self.show_error('Unlock Failed', 'SCSI decrypt command failed. Check password and connections.' + hint + detail_msg)
                 return
 
             self.set_state('MOUNT')
