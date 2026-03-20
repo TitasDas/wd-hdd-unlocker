@@ -3,7 +3,7 @@
 Linux desktop utility for unlocking compatible WD Security-protected drives and mounting them.
 If you use WD My Passport drives on Linux and get stuck with a locked drive, this helps you unlock and mount it with a simple desktop app and CLI flow. It is aimed at Linux users who need practical access to their own WD-encrypted external drives.
 
-Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIMER](DISCLAIMER.md).
+Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIMER](docs/DISCLAIMER.md).
 
 ## Screenshots
 ### Light Mode - Main
@@ -25,8 +25,8 @@ Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIM
 
 ## Quick Start
 1. Install Python 3 and PyQt5.
-2. Run `./build-linux.sh`.
-3. Run `./install-desktop-entry.sh`.
+2. Run `./scripts/build-linux.sh`.
+3. Run `./scripts/install-desktop-entry.sh`.
 4. Launch **WD Security Unlocker**.
 
 ## Credits
@@ -36,13 +36,13 @@ Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIM
 Core docs:
 - [NOTICE](NOTICE)
 - [LICENSE](LICENSE)
-- [TERMS](TERMS.md)
-- [LEGAL_USE](LEGAL_USE.md)
-- [TRADEMARKS](TRADEMARKS.md)
-- [SECURITY](SECURITY.md)
-- [CONTRIBUTING](CONTRIBUTING.md)
-- [SAFETY](SAFETY.md)
-- [RELEASE_CHECKLIST](RELEASE_CHECKLIST.md)
+- [TERMS](docs/TERMS.md)
+- [LEGAL_USE](docs/LEGAL_USE.md)
+- [TRADEMARKS](docs/TRADEMARKS.md)
+- [SECURITY](docs/SECURITY.md)
+- [CONTRIBUTING](docs/CONTRIBUTING.md)
+- [SAFETY](docs/SAFETY.md)
+- [RELEASE_CHECKLIST](docs/RELEASE_CHECKLIST.md)
 
 ## Canary
 `CANARY:WDSU:20260320:R2B9K1`

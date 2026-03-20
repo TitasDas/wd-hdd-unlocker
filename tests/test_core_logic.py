@@ -53,7 +53,7 @@ def _install_pyqt5_stubs():
 def _load_app_module():
     _install_pyqt5_stubs()
     root = os.path.dirname(os.path.dirname(__file__))
-    app_path = os.path.join(root, 'wd-security.py')
+    app_path = os.path.join(root, 'app', 'wd-security.py')
     spec = importlib.util.spec_from_file_location('wd_security_app', app_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
