@@ -3,11 +3,17 @@
 Linux desktop utility for unlocking compatible WD Security-protected drives and mounting them.
 
 ## Screenshots
-### Main Screen
-![Main screen](assets/screenshot-home.png)
+### Light Mode - Main
+![Light mode main](assets/screenshot-light-main.png)
 
-### Unlock Success
-![Unlock success](assets/screenshot-success.png)
+### Light Mode - Unlock Success
+![Light mode success](assets/screenshot-light-success.png)
+
+### Dark Mode - Main
+![Dark mode main](assets/screenshot-dark-main.png)
+
+### Dark Mode - Unlock Success
+![Dark mode success](assets/screenshot-dark-success.png)
 
 ## What You Can Do
 - Unlock a WD Security-protected drive using your password.
