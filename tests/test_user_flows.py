@@ -139,6 +139,42 @@ class UserFlowSimulationTests(unittest.TestCase):
         self.assertTrue(any(c[0] == 'umount' for c in calls))
         self.assertTrue(any('Re-mounting to a safe path' in x for x in logs))
 
+    def test_mount_flow_reports_accessible_path_when_mount_commands_error(self):
+        w = self._build_window_minimal()
+        states = []
+        logs = []
+        opened = []
+
+        w.set_state = lambda s: states.append(s)
+        w.append_log = lambda msg: logs.append(msg)
+        w.try_open_mount_path = lambda p: opened.append(p) or True
+        w.get_partname = lambda: setattr(self.m, 'PARTNAME', 'sda') or 1
+        w.resolve_mount_device = lambda p: '/dev/sda1'
+
+        def fake_run_cmd(args, check=False):
+            if args[:1] == ['partprobe']:
+                return ('', '', 0)
+            if args[:3] == ['findmnt', '-n', '-o']:
+                return ('', '', 1)
+            if args[:1] == ['mkdir']:
+                return ('', '', 0)
+            if args[:1] == ['mount']:
+                return ('', 'permission denied', 1)
+            if args[:2] == ['udisksctl', 'mount']:
+                return ('', 'not authorized', 1)
+            return ('', '', 0)
+
+        with mock.patch.object(self.m, 'run_cmd', side_effect=fake_run_cmd), \
+            mock.patch.object(self.m.os.path, 'exists', return_value=False), \
+            mock.patch.object(w, 'find_existing_mount_target', return_value='/home/mnt/wd-drive'):
+            w.mount_wd()
+
+        self.assertIn('WARN', states)
+        self.assertTrue(any('already accessible' in x for x in logs))
+        self.assertTrue(any('/home/mnt/wd-drive' in x for x in logs))
+        self.assertEqual(opened, ['/home/mnt/wd-drive'])
+        self.assertFalse(any('Mount manually if needed' in x for x in logs))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

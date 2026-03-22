@@ -483,6 +483,43 @@ class WDSecurityWindow:
                     return '/dev/' + name
         return base_device
 
+    def find_existing_mount_target(self, devname):
+        """Best-effort lookup for an existing mount target for WD device aliases."""
+        candidates = {devname, os.path.realpath(devname)}
+
+        if PARTNAME:
+            disk_dev = "/dev/" + PARTNAME
+            candidates.update({disk_dev, os.path.realpath(disk_dev)})
+            out, _, rc = run_cmd(["lsblk", "-ln", "-o", "NAME", disk_dev])
+            if rc == 0:
+                for name in out.splitlines():
+                    name = name.strip()
+                    if not name:
+                        continue
+                    path = "/dev/" + name
+                    candidates.update({path, os.path.realpath(path)})
+
+        mounted_at, _, rc = run_cmd(["findmnt", "-n", "-o", "TARGET", "--source", devname])
+        if rc == 0 and mounted_at.strip() and os.path.isdir(mounted_at.strip()):
+            return mounted_at.strip()
+
+        out, _, rc = run_cmd(["findmnt", "-rn", "-o", "SOURCE,TARGET"])
+        if rc != 0:
+            return ""
+
+        for line in out.splitlines():
+            fields = line.split(None, 1)
+            if len(fields) != 2:
+                continue
+            source, target = fields
+            source = source.strip().strip("[]")
+            target = target.strip()
+            if source in candidates or os.path.realpath(source) in candidates:
+                if target and os.path.isdir(target):
+                    return target
+
+        return ""
+
     def decrypt_wd(self):
         self.call_cooking_pw()
 
@@ -774,11 +811,25 @@ class WDSecurityWindow:
                 self.append_log('WD hard drive decrypted and mounted successfully at: ' + mounted_at.strip())
                 self.try_open_mount_path(mounted_at.strip())
             else:
-                self.set_state('WARN')
-                self.append_log('Drive mounted but target path is invalid in the desktop view. Use /mnt/wd-security-' + PARTNAME)
+                detected_target = self.find_existing_mount_target(devname)
+                if detected_target:
+                    self.set_state('WARN')
+                    self.append_log('Drive appears mounted despite a mount-path mismatch.')
+                    self.append_log('Drive is accessible at: ' + detected_target)
+                    self.try_open_mount_path(detected_target)
+                else:
+                    self.set_state('WARN')
+                    self.append_log('Drive mounted but target path is invalid in the desktop view. Use /mnt/wd-security-' + PARTNAME)
         else:
-            self.set_state('WARN')
-            self.append_log('Drive decrypted, but automount failed. Mount manually if needed.')
+            detected_target = self.find_existing_mount_target(devname)
+            if detected_target:
+                self.set_state('WARN')
+                self.append_log('Mount command reported an error, but the drive is already accessible.')
+                self.append_log('Drive is accessible at: ' + detected_target)
+                self.try_open_mount_path(detected_target)
+            else:
+                self.set_state('WARN')
+                self.append_log('Drive decrypted, but automount failed. Mount manually if needed.')
 
         self.mount_btn.setEnabled(False)
 
