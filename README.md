@@ -23,7 +23,27 @@ Legal: unofficial utility, no WD affiliation, authorized-use only. See [DISCLAIM
 - Mount the drive after unlock.
 - Run from terminal or desktop launcher.
 
-## Quick Start
+## Install from Release (Recommended)
+1. Open the latest release: https://github.com/TitasDas/wd-hdd-unlocker/releases/latest
+2. Download these files:
+   - `wd-hdd-unlocker-linux-x86_64`
+   - `SHA256SUMS.txt`
+3. Verify checksum:
+   ```bash
+   sha256sum -c SHA256SUMS.txt --ignore-missing
+   ```
+4. Make binary executable:
+   ```bash
+   chmod +x wd-hdd-unlocker-linux-x86_64
+   ```
+5. Run with root privileges:
+   ```bash
+   sudo ./wd-hdd-unlocker-linux-x86_64
+   ```
+
+Note: If your desktop uses PolicyKit, `pkexec ./wd-hdd-unlocker-linux-x86_64` may be preferred.
+
+## Build from Source
 1. Install Python 3 and PyQt5.
 2. Run `./scripts/build-linux.sh`.
 3. Run `./scripts/install-desktop-entry.sh`.

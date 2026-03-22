@@ -35,17 +35,17 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           mkdir -p release
-          cp dist/wd-security "release/wd-security-linux-x86_64"
-          chmod +x "release/wd-security-linux-x86_64"
-          tar -C release -czf "release/wd-security-linux-x86_64.tar.gz" wd-security-linux-x86_64
+          cp dist/wd-security "release/wd-hdd-unlocker-linux-x86_64"
+          chmod +x "release/wd-hdd-unlocker-linux-x86_64"
+          tar -C release -czf "release/wd-hdd-unlocker-linux-x86_64.tar.gz" wd-hdd-unlocker-linux-x86_64
           cd release
-          sha256sum wd-security-linux-x86_64 wd-security-linux-x86_64.tar.gz > SHA256SUMS.txt
+          sha256sum wd-hdd-unlocker-linux-x86_64 wd-hdd-unlocker-linux-x86_64.tar.gz > SHA256SUMS.txt
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/wd-security-linux-x86_64
-            release/wd-security-linux-x86_64.tar.gz
+            release/wd-hdd-unlocker-linux-x86_64
+            release/wd-hdd-unlocker-linux-x86_64.tar.gz
             release/SHA256SUMS.txt
           generate_release_notes: true
