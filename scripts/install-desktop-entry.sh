@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
+# Developer install: a per-user desktop entry that launches from this checkout.
+# End users should install the .deb from the releases page instead.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LAUNCHER="$PROJECT_ROOT/scripts/wd-security-launcher.sh"
 APPS_DIR="$HOME/.local/share/applications"
-DESKTOP_FILE="$APPS_DIR/wd-security.desktop"
+ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
+DESKTOP_FILE="$APPS_DIR/wd-hdd-unlocker.desktop"
 
-mkdir -p "$APPS_DIR"
+mkdir -p "$APPS_DIR" "$ICON_DIR"
+cp "$PROJECT_ROOT/assets/wd-hdd-unlocker.svg" "$ICON_DIR/wd-hdd-unlocker.svg"
 
-cat > "$DESKTOP_FILE" <<EOF
-[Desktop Entry]
-Name=WD My Passport Linux Unlocker
-Comment=Unlock WD My Passport / Ultra drives on Linux
-Exec=$LAUNCHER
-Type=Application
-Terminal=false
-Categories=Utility;System;
-Keywords=WD;Western Digital;My Passport;My Passport Ultra;unlock;Linux;security;drive;
-StartupNotify=true
-EOF
+sed -e "s|^Exec=.*|Exec=$LAUNCHER|" -e "s|^Icon=.*|Icon=$ICON_DIR/wd-hdd-unlocker.svg|" \
+  "$PROJECT_ROOT/packaging/wd-hdd-unlocker.desktop" > "$DESKTOP_FILE"
 
 chmod +x "$LAUNCHER"
 chmod +x "$DESKTOP_FILE"
 
 echo "Desktop entry installed: $DESKTOP_FILE"
-echo "If it fails, check log: ~/.local/state/wd-security/launcher.log"
+echo "Launcher log: ~/.local/state/wd-hdd-unlocker/launcher.log"

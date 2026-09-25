@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=WD My Passport Linux Unlocker
+GenericName=Drive security manager
+Comment=Unlock, mount, protect and eject WD My Passport drives
+Exec=wd-hdd-unlocker
+Icon=wd-hdd-unlocker
+Terminal=false
+Categories=System;Utility;Security;
+Keywords=WD;Western Digital;My Passport;easystore;Elements;unlock;lock;password;encrypt;drive;
+StartupNotify=true
+StartupWMClass=wd-hdd-unlocker-bin

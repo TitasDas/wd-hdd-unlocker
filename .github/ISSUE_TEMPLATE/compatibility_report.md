@@ -1,29 +1,30 @@
 ---
-name: Compatibility Report
-about: Report WD model compatibility and unlock behavior on Linux
+name: Compatibility report
+about: A WD drive that is not recognised or does not unlock
+title: 'Compatibility report: <model> on <distro>'
 labels: compatibility, model-support
+assignees: ''
 ---
 
-## Summary
-- Distro + version:
+## Environment
+- Distro and version:
 - Kernel (`uname -r`):
-- WD model label:
-- Outcome: (success / unlock failed / mount issue)
+- App version (shown at the bottom of the sidebar):
+- How the app was started (deb menu entry, standalone binary, source):
 
-## App Logs
-Paste last 40 lines from **Status & Activity**.
+## Drive
+- Model label printed on the drive:
+- What the Drive page shows (status pill, cipher, control node):
 
 ## Diagnostics
-Run and paste output (redact sensitive values):
+Open the Advanced page, press "Copy diagnostics" and paste the report below. Serial numbers are masked automatically; check the text for anything else you would rather not share.
 
-```bash
-lsusb
-lsusb -v -d 1058:
-udevadm info --query=property --name /dev/sdX
-udevadm info --query=property --name /dev/sgY
-lsblk -o NAME,MODEL,SERIAL,TRAN,TYPE,SIZE
+```
+<paste here>
 ```
 
-## Notes
-- Replace `sdX` and `sgY` with device names shown in app logs.
-- Redact serial numbers and personal mount paths before posting.
+## Extra command output (optional)
+```
+lsusb -v -d 1058: 2>/dev/null | head -60
+lsblk -o NAME,MODEL,TRAN,TYPE,SIZE,FSTYPE
+```

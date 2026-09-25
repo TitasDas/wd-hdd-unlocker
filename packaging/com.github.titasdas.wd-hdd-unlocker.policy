@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>wd-hdd-unlocker</vendor>
+  <vendor_url>https://github.com/TitasDas/wd-hdd-unlocker</vendor_url>
+  <icon_name>wd-hdd-unlocker</icon_name>
+  <action id="com.github.titasdas.wd-hdd-unlocker.run">
+    <description>Run WD My Passport Linux Unlocker</description>
+    <message>Authentication is required to manage WD drive security (unlock, lock, password, erase).</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/wd-hdd-unlocker/wd-hdd-unlocker-bin</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
