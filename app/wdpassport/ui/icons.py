@@ -55,14 +55,40 @@ def icon(name, color, size=20, dpr=1.0):
     return QIcon(pixmap(name, color, size, dpr))
 
 
+# The product mark: a drive platter with a keyhole cut through it, the slot
+# running out through the edge. One closed outline on a 64-unit grid.
+# Construction notes live in docs/BRAND.md.
+MARK_PATH = 'M 38.000 58.325 A 27 27 0 1 0 26.000 58.325 L 27.500 32.000 A 7.5 7.5 0 1 1 36.500 32.000 L 38.000 58.325 Z'
+
+
+def mark_svg(color, size=24):
+    return ('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 64 64">'
+            '<path fill="%s" d="%s"/></svg>' % (size, size, color, MARK_PATH))
+
+
+def mark_pixmap(color, size=24, dpr=1.0):
+    key = ('__mark__', color, size, dpr)
+    if key in _cache:
+        return _cache[key]
+    renderer = QSvgRenderer(QByteArray(mark_svg(color, size).encode('utf-8')))
+    pm = QPixmap(int(size * dpr), int(size * dpr))
+    pm.setDevicePixelRatio(dpr)
+    pm.fill(Qt.transparent)
+    painter = QPainter(pm)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, size, size))
+    painter.end()
+    _cache[key] = pm
+    return pm
+
+
 def app_icon_svg():
+    """The app icon tile: the mark in white on the brand gradient."""
     return (
-        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64">'
         '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
         '<stop offset="0" stop-color="#1f5fbf"/><stop offset="1" stop-color="#0f1e33"/></linearGradient></defs>'
-        '<rect x="8" y="8" width="112" height="112" rx="26" fill="url(#g)"/>'
-        '<rect x="30" y="44" width="68" height="44" rx="10" fill="none" stroke="#ffffff" stroke-width="7"/>'
-        '<path d="M46 44V34a18 18 0 0 1 36 0v10" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>'
-        '<circle cx="64" cy="66" r="7" fill="#ffffff"/>'
-        '</svg>'
+        '<rect width="64" height="64" rx="14" fill="url(#g)"/>'
+        '<path fill="#ffffff" d="%s" transform="translate(32 32) scale(0.8) translate(-32 -32)"/>'
+        '</svg>' % MARK_PATH
     )
