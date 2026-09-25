@@ -5,7 +5,7 @@
 
 ![WD My Passport Linux Unlocker](assets/hero.png)
 
-[Watch the narrated walkthrough](https://implantintelligence.com/p/wd-hdd-unlocker#usage-demo) (1 min 32 sec) on the product page.
+[Watch the narrated walkthrough](https://implantintelligence.com/p/wd-hdd-unlocker#usage-demo) (1 min 26 sec) on the product page.
 
 [![Tests](https://github.com/TitasDas/wd-hdd-unlocker/actions/workflows/tests.yml/badge.svg)](https://github.com/TitasDas/wd-hdd-unlocker/actions/workflows/tests.yml)
 [![Latest release](https://img.shields.io/github/v/release/TitasDas/wd-hdd-unlocker?label=release)](https://github.com/TitasDas/wd-hdd-unlocker/releases/latest)
