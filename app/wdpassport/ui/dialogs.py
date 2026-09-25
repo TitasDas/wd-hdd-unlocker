@@ -164,6 +164,38 @@ class EraseDialog(_BaseDialog):
         return self.format.currentData(), self.label_edit.text().strip()
 
 
+class FormatDialog(_BaseDialog):
+    def __init__(self, drive_name, formats, current_label='', parent=None):
+        super().__init__('Format drive', parent)
+        self.setMinimumWidth(520)
+        self.format = QComboBox()
+        for fstype, text in formats:
+            self.format.addItem(text, fstype)
+        self.label_edit = QLineEdit(current_label or 'My Passport')
+        self.label_edit.setMaxLength(32)
+        self.typed = QLineEdit()
+        self.typed.setPlaceholderText('Type FORMAT to confirm')
+        self.form.addRow('Filesystem', self.format)
+        self.form.addRow('Volume name', self.label_edit)
+        self.form.addRow('Confirmation', self.typed)
+        warning = label('Formatting %s deletes every file on it. The password and encryption key stay as they are.'
+                        % drive_name, 'dangerText')
+        self.finish_layout()
+        self.layout_.insertWidget(0, warning)
+        self.ok.setText('Format')
+        self.ok.setObjectName('danger')
+        self.ok.setEnabled(False)
+        self.typed.textChanged.connect(self._validate)
+        self.label_edit.textChanged.connect(self._validate)
+
+    def _validate(self):
+        self.ok.setEnabled(self.typed.text().strip() == 'FORMAT' and bool(self.label_edit.text().strip())
+                           and self.format.count() > 0)
+
+    def values(self):
+        return self.format.currentData(), self.label_edit.text().strip()
+
+
 def confirm(parent, title, text, ok_text='Continue', danger=False):
     box = QMessageBox(parent)
     box.setWindowTitle(title)
