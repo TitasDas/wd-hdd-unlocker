@@ -10,3 +10,7 @@ python3 compose.py        # frames/ at 25 fps, 1280x960, plus captions, transcri
 ```
 
 Fonts come from the canvas-design skill (Outfit and Instrument Sans, both OFL); point `WALKTHROUGH_FONTS` at another directory if it lives elsewhere. The storyboard is the `SCENES` list in `compose.py`: one line per scene with its capture, zoom, focus and caption. Captions double as the VTT cues and chapter titles.
+
+## Narration
+
+`narration.json` holds the spoken script, one line per scene. `narrate.py` voices it with Kokoro-82M (Apache 2.0, runs on CPU: `pip install torch --index-url https://download.pytorch.org/whl/cpu kokoro soundfile`), and `mix.py` stretches nothing itself: render with `NARRATION_LENS=<key>-lens.json` so each scene holds long enough for its line, then run `mix.py <key>` to lay the voice in, duck the music under it with a sidechain compressor, and write captions and a transcript that follow the narration. Paths in `mix.py` point at the working folder used to build the published video; adjust them to yours. The video pages label the narration as a synthetic voice.
