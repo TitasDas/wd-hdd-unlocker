@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- New product mark and app icon: a drive platter with a keyhole cut through to the edge. Used in the sidebar, the window icon, the desktop entry and the .deb. Construction and usage rules in docs/BRAND.md.
+
 ## 2.0.0
 
 The app now covers the whole WD Security feature set instead of unlock only.

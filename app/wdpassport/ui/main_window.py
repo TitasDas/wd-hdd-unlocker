@@ -140,7 +140,7 @@ class MainWindow(QMainWindow):
         brand = QHBoxLayout()
         brand.setSpacing(10)
         self.brand_icon = QLabel()
-        self.brand_icon.setPixmap(icons.pixmap('shield', '#ffffff', 26, self.devicePixelRatioF()))
+        self.brand_icon.setPixmap(icons.mark_pixmap('#ffffff', 30, self.devicePixelRatioF()))
         text = QVBoxLayout()
         text.setSpacing(0)
         t1 = QLabel('WD My Passport')

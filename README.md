@@ -1,4 +1,7 @@
-# WD My Passport Linux Unlocker
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/lockup-dark.png">
+  <img alt="Linux Unlocker for WD My Passport" src="assets/brand/lockup.png" width="380">
+</picture>
 
 ![WD My Passport Linux Unlocker](assets/hero.png)
 
@@ -87,7 +90,7 @@ python3 app/wd-security.py --demo --screenshots assets                    # rege
 ./scripts/build-linux.sh && ./scripts/build-deb.sh                        # binary and .deb in dist/
 ```
 
-`app/wdpassport/` holds the code: `protocol.py` (commands and hashing, pure functions), `transport.py` (SG_IO, sg_raw fallback), `devices.py` (udev, mounts, power), `manager.py` (the operations), `simulator.py` (fake drive for tests and demo) and `ui/` (PyQt5). `packaging/` has the desktop entry, polkit policy and launcher. A `v*` tag builds and publishes the release.
+`app/wdpassport/` holds the code: `protocol.py` (commands and hashing, pure functions), `transport.py` (SG_IO, sg_raw fallback), `devices.py` (udev, mounts, power), `manager.py` (the operations), `simulator.py` (fake drive for tests and demo) and `ui/` (PyQt5). `packaging/` has the desktop entry, polkit policy and launcher. `assets/brand/` holds the logo files; see [docs/BRAND.md](docs/BRAND.md). A `v*` tag builds and publishes the release.
 
 ## Credits and legal
 
