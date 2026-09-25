@@ -3,7 +3,9 @@
 Output: frames/NNNNN.png at 25 fps, 1280x960 (matches the storefront player),
 plus usage-demo.vtt, usage-demo-transcript.txt and chapters.json.
 """
-import json, math, os, shutil
+import json, math, os, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import captions as CAP
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 CAPS = 'caps'
@@ -20,7 +22,7 @@ def font(name, size):
 F_TITLE = font('Outfit-Bold.ttf', 64)
 F_H2 = font('Outfit-Bold.ttf', 40)
 F_BODY = font('InstrumentSans-Regular.ttf', 30)
-F_CAP = font('InstrumentSans-Bold.ttf', 30)
+F_CAP = font('Outfit-Bold.ttf', 50)
 F_SMALL = font('InstrumentSans-Regular.ttf', 22)
 
 _bg = None
@@ -77,12 +79,7 @@ def app_frame(cap, dialog=None, zoom=1.0, focus=(0.5, 0.5), caption='', caption_
     y = 96
     with_shadow(canvas, shot, ((W - box_w) // 2, y), 16)
     if caption:
-        bar = Image.new('RGBA', (W, 96), (0, 0, 0, 0))
-        d = ImageDraw.Draw(bar)
-        tw = d.textlength(caption, font=F_CAP)
-        d.rounded_rectangle(((W - tw) / 2 - 28, 18, (W + tw) / 2 + 28, 78), radius=30, fill=(15, 30, 51, int(230 * caption_alpha)))
-        d.text(((W - tw) / 2, 30), caption, font=F_CAP, fill=(255, 255, 255, int(255 * caption_alpha)))
-        canvas.paste(bar, (0, H - 110), bar)
+        canvas = CAP.caption(canvas, caption, F_CAP, alpha=caption_alpha, accent=(79, 143, 230))
     if dim:
         canvas = Image.blend(canvas, Image.new('RGB', (W, H), NAVY), dim)
     return canvas
@@ -111,20 +108,20 @@ def card(lines, sub=None, mark=True, small=None):
 # ---- storyboard ---------------------------------------------------------------
 # Each scene: (kind, seconds, args). Captions double as the VTT cue text.
 SCENES = [
-    ('card', 3.2, dict(lines=['Your WD drive.', 'On Linux.'], sub=['WD Security only ships for Windows and macOS.', 'This app does the same job on Linux.'])),
-    ('app', 4.0, dict(cap='01-drive-locked', zoom=(1.0, 1.08), focus=(0.55, 0.3), caption='Plug it in. The app shows the drive, the cipher and your password hint.')),
+    ('card', 3.2, dict(lines=['Your WD drive.', 'On Linux.'], sub=['WD Security only ships for Windows and Mac.', 'This app does the same job on Linux.'])),
+    ('app', 4.0, dict(cap='01-drive-locked', zoom=(1.0, 1.08), focus=(0.55, 0.3), caption='Plug in the drive. Your password hint shows up.')),
     ('typing', 4.6, dict(caption='Type the password once.')),
-    ('app', 4.0, dict(cap='04-drive-unlocked', zoom=(1.0, 1.1), focus=(0.5, 0.42), caption='It unlocks and mounts for your user. Copy files like any USB drive.')),
-    ('app', 3.6, dict(cap='05-volumes', zoom=(1.12, 1.2), focus=(0.55, 0.7), caption='Mounted under /media with you as the owner.')),
-    ('app', 3.4, dict(cap='06-password', zoom=(1.0, 1.06), focus=(0.5, 0.35), caption='Set, change or remove the password. Add a hint.')),
-    ('app', 4.0, dict(cap='07-change-dialog', dialog='07-change-dialog-dialog', zoom=(1.05, 1.12), focus=(0.5, 0.5), caption='Works with WD Security on Windows and macOS.')),
-    ('app', 3.4, dict(cap='08-advanced', zoom=(1.0, 1.06), focus=(0.5, 0.3), caption='Format as exFAT, NTFS or ext4. The password stays.')),
-    ('app', 3.6, dict(cap='09-format-dialog', dialog='09-format-dialog-dialog', zoom=(1.05, 1.1), focus=(0.5, 0.5), caption='Pick a filesystem and a name. Type FORMAT to confirm.')),
-    ('app', 3.6, dict(cap='10-erase-dialog', dialog='10-erase-dialog-dialog', zoom=(1.05, 1.1), focus=(0.5, 0.5), caption='Lost the password? Erase resets the key. Typed confirmation, no undo.')),
-    ('app', 3.2, dict(cap='11-activity', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Every command is logged. Diagnostics copy with one click.')),
-    ('app', 3.2, dict(cap='12-drive-dark', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Light or dark. Keyboard shortcuts throughout.')),
-    ('app', 3.6, dict(cap='13-ejected', zoom=(1.0, 1.05), focus=(0.5, 0.2), caption='Eject and lock. It locks the moment power drops.')),
-    ('card', 4.6, dict(lines=['Free. Open source.'], sub=['sudo apt install ./wd-hdd-unlocker_2.0.1_amd64.deb', 'or the standalone binary for any x86_64 distro'], small='Unofficial. Not affiliated with Western Digital. Use only on drives you own.')),
+    ('app', 4.0, dict(cap='04-drive-unlocked', zoom=(1.0, 1.1), focus=(0.5, 0.42), caption='Unlocked and mounted. Copy files as usual.')),
+    ('app', 3.6, dict(cap='05-volumes', zoom=(1.12, 1.2), focus=(0.55, 0.7), caption='The files belong to you, not to root.')),
+    ('app', 3.6, dict(cap='06-password', zoom=(1.0, 1.06), focus=(0.5, 0.35), caption='Set, change or remove the password.')),
+    ('app', 4.0, dict(cap='07-change-dialog', dialog='07-change-dialog-dialog', zoom=(1.05, 1.12), focus=(0.5, 0.5), caption='It still opens with WD Security on Windows and Mac.')),
+    ('app', 3.8, dict(cap='08-advanced', zoom=(1.0, 1.06), focus=(0.5, 0.3), caption='Reformat as exFAT, NTFS or ext4.')),
+    ('app', 3.6, dict(cap='09-format-dialog', dialog='09-format-dialog-dialog', zoom=(1.05, 1.1), focus=(0.5, 0.5), caption='Pick a filesystem and a name.')),
+    ('app', 3.6, dict(cap='10-erase-dialog', dialog='10-erase-dialog-dialog', zoom=(1.05, 1.1), focus=(0.5, 0.5), caption='Lost the password? Erase the drive and start again.')),
+    ('app', 3.6, dict(cap='11-activity', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Every step is logged, in case you need help.')),
+    ('app', 3.4, dict(cap='12-drive-dark', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Light or dark, with keyboard shortcuts.')),
+    ('app', 3.6, dict(cap='13-ejected', zoom=(1.0, 1.05), focus=(0.5, 0.2), caption='Eject, and the drive locks itself.')),
+    ('card', 4.6, dict(lines=['Free. Open source.'], sub=['Get the .deb or the standalone binary', 'at implantintelligence.com'], small='Unofficial. Not affiliated with Western Digital. Use only on drives you own.')),
 ]
 XFADE = 0.6  # seconds
 
@@ -200,3 +197,4 @@ for kind, dur, args in SCENES:
     transcript.append(args.get('caption') or ' '.join(args.get('lines', []) + (args.get('sub') or [])))
 open('usage-demo-transcript.txt', 'w').write('\n'.join(transcript) + '\n')
 print('frames', frame_idx, 'duration', duration)
+json.dump({'durs': [d for _, d, _ in SCENES], 'xfade': XFADE, 'duration': duration}, open('timing.json', 'w'))
