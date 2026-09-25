@@ -6,6 +6,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'app'))
 
 from wdpassport import protocol  # noqa: E402
+from wdpassport import transport as transport_mod  # noqa: E402
 from wdpassport.manager import DriveManager, OperationError  # noqa: E402
 from wdpassport.simulator import SimulatedSystem, SimulatedTransport  # noqa: E402
 
@@ -198,6 +199,226 @@ class PasswordTests(unittest.TestCase):
         system.powered_off = False
         state = manager.scan()[0]
         self.assertEqual(state.status.security, protocol.STATUS_NOT_PROTECTED)
+
+
+class FormatTests(unittest.TestCase):
+    def test_format_requires_accessible_drive(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.format_drive(state, 'exfat', 'X')
+        self.assertIn('Unlock the drive', str(ctx.exception))
+        self.assertIsNone(system.formatted)
+
+    def test_format_unmounts_then_formats_and_keeps_password(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        manager.unlock(state, 'demo-pass')
+        node = manager.format_drive(state, 'ntfs', 'Work')
+        self.assertEqual(node, '/dev/sdz1')
+        self.assertIn(('unmount', '/dev/sdz1'), system.commands)
+        self.assertEqual(system.formatted, ('sdz', 'ntfs', 'Work'))
+        self.assertEqual(transport.key_resets, 0)
+        self.assertEqual(transport.security, protocol.STATUS_UNLOCKED)
+        self.assertEqual(state.drive.partitions[0].fstype, 'ntfs')
+        self.assertEqual(state.drive.partitions[0].label, 'Work')
+
+    def test_format_rejects_unknown_filesystem(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError):
+            manager.format_drive(state, 'btrfs', 'X')
+
+    def test_format_reports_tool_failure(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        state = manager.scan()[0]
+
+        def broken(disk, fstype, label, log):
+            raise RuntimeError('mkfs.exfat is not installed')
+
+        system.format_partition_table = broken
+        with self.assertRaises(OperationError) as ctx:
+            manager.format_drive(state, 'exfat', 'X')
+        self.assertIn('mkfs.exfat', str(ctx.exception))
+
+    def test_format_stops_when_unmount_fails(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        system.mounts['/dev/sdz1'] = '/media/demo/busy'
+
+        def busy(node, log):
+            raise RuntimeError('could not unmount /dev/sdz1: target is busy')
+
+        system.unmount = busy
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.format_drive(state, 'exfat', 'X')
+        self.assertIn('Close any open files', str(ctx.exception))
+        self.assertIsNone(system.formatted)
+
+
+class MoreManagerTests(unittest.TestCase):
+    def test_unsupported_drive_has_no_status(self):
+        transport = SimulatedTransport(node='/dev/sg42')
+        system = SimulatedSystem(transport)
+        system.candidates = ['/dev/sg8', '/dev/sdz']  # nothing here answers
+        logs = []
+        manager = DriveManager(transport=transport, system=system, log=logs.append)
+        state = manager.scan()[0]
+        self.assertFalse(state.supported)
+        self.assertEqual(state.drive.control_node, '')
+        self.assertTrue(any('did not answer' in line for line in logs))
+        with self.assertRaises(OperationError):
+            manager.unlock(state, 'demo-pass')
+
+    def test_refresh_keeps_control_node_first(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        before = len(transport.commands)
+        state = manager.refresh(state)
+        self.assertEqual(state.drive.sg_candidates[0], '/dev/sg9')
+        # only status + handy store on the known node, no probing of /dev/sg8
+        self.assertEqual([c[0] for c in transport.commands[before:]], ['/dev/sg9', '/dev/sg9'])
+
+    def test_grant_write_access_requires_desktop_user(self):
+        transport = SimulatedTransport()
+        system = SimulatedSystem(transport, user=False)
+        manager = DriveManager(transport=transport, system=system)
+        with self.assertRaises(OperationError):
+            manager.grant_write_access('/mnt/x')
+        manager2, transport2, system2, logs2 = make()
+        manager2.grant_write_access('/media/demo/x')
+        self.assertIn(('chown', '1000:1000', '/media/demo/x'), system2.commands)
+
+    def test_eject_reports_busy_mount(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        system.mounts['/dev/sdz1'] = '/media/demo/busy'
+
+        def busy(node, log):
+            raise RuntimeError('could not unmount /dev/sdz1: target is busy')
+
+        system.unmount = busy
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.eject_and_lock(state)
+        self.assertIn('Close any open files', str(ctx.exception))
+        self.assertFalse(system.powered_off)
+
+    def test_eject_reports_power_off_failure(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+
+        def no_power(drive, log):
+            raise RuntimeError('no way to power off')
+
+        system.power_off = no_power
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.eject_and_lock(state)
+        self.assertIn('Unplug it to lock it', str(ctx.exception))
+
+    def test_mount_without_partitions_explains(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        system.parts = []
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.mount(state)
+        self.assertIn('no partitions', str(ctx.exception))
+
+    def test_mount_skips_unformatted_partition(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        system.parts[0].fstype = ''
+        state = manager.scan()[0]
+        with self.assertRaises(OperationError) as ctx:
+            manager.mount(state)
+        self.assertIn('nothing could be mounted', str(ctx.exception))
+        self.assertTrue(any('no recognisable filesystem' in line for line in logs))
+
+    def test_mount_after_reenumeration_updates_disk(self):
+        manager, transport, system, logs = make(security=protocol.STATUS_NOT_PROTECTED)
+        state = manager.scan()[0]
+        system.rescan_disk = lambda disk, log, wait_s=0: 'sdy'
+        original_describe = system.describe_drive
+        system.describe_drive = lambda disk: original_describe(disk)
+        system.parts = [type(system.parts[0])('sdy1', 'exfat', 'Moved', 10)]
+        targets = manager.mount(state)
+        self.assertEqual(state.drive.disk, 'sdy')
+        self.assertEqual(targets, ['/media/demo/Moved'])
+        self.assertTrue(any('re-enumerated' in line for line in logs))
+
+    def test_change_password_hint_write_failure_is_logged_not_fatal(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        manager.unlock(state, 'demo-pass')
+        original = transport.execute
+
+        def flaky(node, cdb, data_out=None, data_in_len=0):
+            if bytes(cdb)[0] == 0xDA:
+                raise transport_mod.ScsiError('write refused', node=node)
+            return original(node, cdb, data_out=data_out, data_in_len=data_in_len)
+
+        transport.execute = flaky
+        manager.change_password(state, 'demo-pass', 'next', hint='new')
+        self.assertEqual(transport.password_blob, protocol.derive_password_blob('next'))
+        self.assertTrue(any('hint could not be updated' in line for line in logs))
+
+    def test_erase_retries_with_plain_key_when_combined_rejected(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        original = transport.execute
+        seen = []
+
+        def picky(node, cdb, data_out=None, data_in_len=0):
+            if bytes(cdb)[:2] == b'\xc1\xe3':
+                seen.append(data_out[3])
+                if data_out[3] == 1:
+                    raise transport_mod.ScsiError('bad', sense=protocol.SenseInfo(0x5, 0x26, 0x00), node=node)
+            return original(node, cdb, data_out=data_out, data_in_len=data_in_len)
+
+        transport.execute = picky
+        manager.erase(state)
+        self.assertEqual(seen, [1, 0])
+        self.assertEqual(transport.key_resets, 1)
+
+    def test_erase_other_failure_is_reported(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+
+        def refuse(node, cdb, data_out=None, data_in_len=0):
+            if bytes(cdb)[:2] == b'\xc1\xe3':
+                raise transport_mod.ScsiError('nope', sense=protocol.SenseInfo(0x5, 0x24, 0x00), node=node)
+            return SimulatedTransport.execute(transport, node, cdb, data_out=data_out, data_in_len=data_in_len)
+
+        transport.execute = refuse
+        with self.assertRaises(OperationError) as ctx:
+            manager.erase(state)
+        self.assertIn('Key reset failed', str(ctx.exception))
+
+    def test_damaged_security_block_falls_back_to_defaults(self):
+        manager, transport, system, logs = make()
+        raw = bytearray(transport.handy[protocol.SECURITY_BLOCK])
+        raw[100] ^= 0xFF
+        transport.handy[protocol.SECURITY_BLOCK] = bytes(raw)
+        state = manager.scan()[0]
+        self.assertIsNone(state.block)
+        self.assertTrue(any('damaged' in line for line in logs))
+        # default parameters still unlock a drive whose password used the defaults
+        manager.unlock(state, 'demo-pass')
+        self.assertEqual(transport.security, protocol.STATUS_UNLOCKED)
+
+    def test_unlock_status_mismatch_is_reported(self):
+        manager, transport, system, logs = make()
+        state = manager.scan()[0]
+        original = transport.execute
+
+        def sticky(node, cdb, data_out=None, data_in_len=0):
+            result = original(node, cdb, data_out=data_out, data_in_len=data_in_len)
+            if bytes(cdb)[:2] == b'\xc1\xe1':
+                transport.security = protocol.STATUS_LOCKED
+            return result
+
+        transport.execute = sticky
+        with self.assertRaises(OperationError) as ctx:
+            manager.unlock(state, 'demo-pass')
+        self.assertIn('still reports', str(ctx.exception))
 
 
 class EraseTests(unittest.TestCase):

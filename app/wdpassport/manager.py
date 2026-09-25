@@ -375,6 +375,30 @@ class DriveManager:
             self.log('Formatted %s as %s' % (node, fstype))
         return after
 
+    def format_drive(self, state, fstype, label=''):
+        """Repartition and format an accessible drive. Keeps the key and password; destroys the files."""
+        drive = state.drive
+        if fstype not in ('exfat', 'ntfs', 'ext4'):
+            raise OperationError('Choose exFAT, NTFS or ext4.')
+        status = self.status(drive)
+        if not status.is_accessible:
+            raise OperationError('Unlock the drive before formatting it (currently: %s).' % status.security_name)
+        drive.partitions = self.system.list_partitions(drive.disk)
+        for part in drive.partitions:
+            if part.mountpoint:
+                self.log('Unmounting %s' % part.mountpoint)
+                try:
+                    self.system.unmount(part.node, self.log)
+                except RuntimeError as exc:
+                    raise OperationError('%s. Close any open files on the drive and try again.' % exc)
+        try:
+            node = self.system.format_partition_table(drive.disk, fstype, label or drive.display_name, self.log)
+        except RuntimeError as exc:
+            raise OperationError('Formatting failed: %s' % exc)
+        drive.partitions = self.system.list_partitions(drive.disk)
+        self.log('Formatted %s as %s' % (node, fstype))
+        return node
+
     # --- helpers ------------------------------------------------------------------
 
     @staticmethod

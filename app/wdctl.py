@@ -55,6 +55,9 @@ def main(argv=None):
     p = sub.add_parser('change-password', help='change the password (drive must be unlocked)')
     p.add_argument('--hint', default=None)
     sub.add_parser('remove-password', help='turn off password protection (drive must be unlocked)')
+    p = sub.add_parser('format', help='repartition and format an unlocked drive; deletes all files')
+    p.add_argument('--fs', choices=['exfat', 'ntfs', 'ext4'], required=True)
+    p.add_argument('--label', default='My Passport')
     p = sub.add_parser('erase', help='reset the encryption key; destroys all data')
     p.add_argument('--format', choices=['exfat', 'ntfs', 'ext4'], default=None)
     p.add_argument('--label', default='My Passport')
@@ -99,6 +102,13 @@ def main(argv=None):
         elif args.cmd == 'remove-password':
             manager.remove_password(state, ask('Current password: '))
             print('Password removed.')
+        elif args.cmd == 'format':
+            print('This deletes every file on %s (%s). Type FORMAT to continue: ' % (d.display_name, d.node), end='', flush=True)
+            if sys.stdin.readline().strip() != 'FORMAT':
+                print('Cancelled.')
+                return 1
+            node = manager.format_drive(state, args.fs, args.label)
+            print('Formatted %s as %s.' % (node, args.fs))
         elif args.cmd == 'erase':
             print('This destroys every file on %s (%s). Type ERASE to continue: ' % (d.display_name, d.node), end='', flush=True)
             if sys.stdin.readline().strip() != 'ERASE':

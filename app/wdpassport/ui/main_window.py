@@ -16,7 +16,7 @@ from ..devices import human_size, which
 from ..manager import OperationError
 from . import icons, theme
 from .dialogs import (
-    ChangePasswordDialog, EraseDialog, RemovePasswordDialog, SetPasswordDialog, confirm, show_about,
+    ChangePasswordDialog, EraseDialog, FormatDialog, RemovePasswordDialog, SetPasswordDialog, confirm, show_about,
 )
 from .widgets import Card, KeyValueGrid, PasswordField, Pill, hrow, label
 
@@ -32,7 +32,7 @@ PAGE_TITLES = {
     'drive': ('Drive', 'Status, volumes and quick actions'),
     'unlock': ('Unlock', 'Enter the drive password to open it'),
     'security': ('Password', 'Set, change or remove the drive password'),
-    'advanced': ('Advanced', 'Erase, diagnostics and support information'),
+    'advanced': ('Advanced', 'Format, erase and diagnostics'),
     'activity': ('Activity', 'Everything the app did in this session'),
 }
 
@@ -366,9 +366,18 @@ class MainWindow(QMainWindow):
 
     def _build_advanced_page(self):
         area, layout = self._scroll_page()
-        self.erase_card = Card('Erase drive', 'Resets the drive\'s encryption key, which makes every file unreadable '
-                               'in an instant. Use it when the password is lost or before passing the drive on. '
-                               'The password is removed and the drive can be formatted afresh.', danger=True)
+        self.format_card = Card('Format drive', 'Start over with an empty exFAT, NTFS or ext4 volume and a new name. '
+                                'The password and encryption key stay as they are. The drive must be unlocked.',
+                                danger=True)
+        self.format_btn = QPushButton('Format')
+        self.format_btn.setObjectName('danger')
+        self.format_btn.clicked.connect(self.do_format)
+        self.format_card.add(hrow(self.format_btn, 'stretch'))
+        layout.addWidget(self.format_card)
+
+        self.erase_card = Card('Erase drive', 'Resets the encryption key, so every file becomes unreadable at once. '
+                               'The password is removed. Use it when the password is lost or before passing the '
+                               'drive on. You can format it in the same step.', danger=True)
         self.erase_btn = QPushButton('Erase everything')
         self.erase_btn.setObjectName('danger')
         self.erase_btn.clicked.connect(self.do_erase)
@@ -433,6 +442,7 @@ class MainWindow(QMainWindow):
         self.change_btn.setIcon(icons.icon('key', '#ffffff', 16, dpr))
         self.remove_btn.setIcon(icons.icon('trash', '#ffffff', 16, dpr))
         self.erase_btn.setIcon(icons.icon('warning', '#ffffff', 16, dpr))
+        self.format_btn.setIcon(icons.icon('drive', '#ffffff', 16, dpr))
         self.diag_copy.setIcon(icons.icon('copy', c, 16, dpr))
         for pill in self.pills:
             pill.apply_theme(self.tokens)
@@ -655,6 +665,7 @@ class MainWindow(QMainWindow):
         self.remove_card.setVisible(bool(s and s.has_password) or s is None)
         self.remove_btn.setEnabled(bool(ok and s.is_unlocked))
         self.erase_btn.setEnabled(ok)
+        self.format_btn.setEnabled(accessible)
         for key in ('unlock', 'security', 'advanced'):
             self.nav_buttons[key].setEnabled(True)
 
@@ -758,15 +769,38 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, 'Done', text)
         self.reload_current()
 
-    def do_erase(self):
-        if self.current is None:
-            return
+    def available_formats(self):
         formats = []
-        for fstype, tool, text in (('exfat', 'mkfs.exfat', 'exFAT (works on Windows, macOS and Linux)'),
+        for fstype, tool, text in (('exfat', 'mkfs.exfat', 'exFAT (Windows, macOS and Linux)'),
                                    ('ntfs', 'mkfs.ntfs', 'NTFS (Windows and Linux)'),
                                    ('ext4', 'mkfs.ext4', 'ext4 (Linux only)')):
             if self.demo or which(tool):
                 formats.append((fstype, text))
+        return formats
+
+    def do_format(self):
+        if self.current is None:
+            return
+        formats = self.available_formats()
+        if not formats:
+            QMessageBox.warning(self, 'No formatting tools', 'Install exfatprogs, ntfs-3g or e2fsprogs to format drives.')
+            return
+        parts = self.current.drive.partitions
+        current_label = parts[0].label if parts else ''
+        dlg = FormatDialog(self.current.drive.display_name, formats, current_label, self)
+        if dlg.exec_() != dlg.Accepted:
+            return
+        fstype, vol_label = dlg.values()
+        if not confirm(self, 'Last check', 'Format %s as %s now? Every file on it will be deleted.'
+                       % (self.current.drive.display_name, fstype), 'Format now', danger=True):
+            return
+        self.run_async(self.manager.format_drive, self.current, fstype, vol_label,
+                       on_done=lambda _: self._after_password('Drive formatted.'), busy_text='Formatting')
+
+    def do_erase(self):
+        if self.current is None:
+            return
+        formats = self.available_formats()
         dlg = EraseDialog(self.current.drive.display_name, self.current.drive.masked_serial, formats, self)
         if dlg.exec_() != dlg.Accepted:
             return

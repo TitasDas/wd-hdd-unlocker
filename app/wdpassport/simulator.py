@@ -159,6 +159,7 @@ class SimulatedSystem:
         self.writable = True
         self.opened = []
         self.parts = [Partition(disk + '1', 'ntfs', 'My Passport', 2 * 10 ** 12)]
+        self.candidates = None
 
     # discovery
     def wd_usb_present(self):
@@ -175,7 +176,7 @@ class SimulatedSystem:
         drive.usb_id = '1058:25e1'
         drive.size = 2 * 10 ** 12
         drive.partitions = self.list_partitions(disk)
-        drive.sg_candidates = ['/dev/sg8', self.transport.node, '/dev/' + disk]
+        drive.sg_candidates = list(self.candidates) if self.candidates else ['/dev/sg8', self.transport.node, '/dev/' + disk]
         return drive
 
     def list_partitions(self, disk):

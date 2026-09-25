@@ -1,152 +1,98 @@
 # WD My Passport Linux Unlocker
 
-Linux desktop app for WD My Passport, My Passport Ultra, easystore and Elements drives that use WD Security. It does what the WD Security and WD Unlocker tools do on Windows and macOS: unlock the drive with its password, mount it so you can copy files as your normal user, set or change or remove the password, eject it (which locks it again), and erase it if the password is lost.
+![WD My Passport Linux Unlocker](assets/hero.png)
 
-Legal: unofficial utility, no WD affiliation, authorised use only. See [DISCLAIMER](docs/DISCLAIMER.md).
+[![Tests](https://github.com/TitasDas/wd-hdd-unlocker/actions/workflows/tests.yml/badge.svg)](https://github.com/TitasDas/wd-hdd-unlocker/actions/workflows/tests.yml)
+[![Latest release](https://img.shields.io/github/v/release/TitasDas/wd-hdd-unlocker?label=release)](https://github.com/TitasDas/wd-hdd-unlocker/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-informational)](#install)
 
-## Screenshots
+WD ships its My Passport drives with WD Security, but only for Windows and macOS. On Linux a locked drive is a brick. This app unlocks it, mounts it so you can copy files as yourself, and covers the rest of what WD Security does: set, change or remove the password, format, eject, and erase a drive whose password is gone.
 
-| Locked drive | Unlock |
-| --- | --- |
-| ![Drive page, locked](assets/screenshot-light-drive-locked.png) | ![Unlock page](assets/screenshot-light-unlock-locked.png) |
-
-| Unlocked and mounted (dark) | Password management |
-| --- | --- |
-| ![Drive page, unlocked, dark theme](assets/screenshot-dark-drive.png) | ![Password page](assets/screenshot-light-security.png) |
-
-## What it does
-
-- Detects attached WD drives and reads their security status, cipher and password hint straight from the drive.
-- Unlocks a locked drive with the password you set in WD Security (or in this app) and mounts it.
-- Mounts volumes with your desktop user as the owner, so copying, moving and deleting files works in the file manager and in the terminal. NTFS, exFAT and FAT volumes are handled with the right ownership options; ext4 volumes get a one-click "Give me write access".
-- Ejects and locks: unmounts everything and powers the USB port down. The drive relocks the moment it loses power, exactly as it would after an unplug.
-- Sets a password with a hint, changes it, or removes it. The hint and hashing parameters are written to the drive in the same format WD Security uses, so the drive keeps working with WD's own software on other machines.
-- Erases the drive by resetting its encryption key (the WD "lost password" recovery), then optionally formats it as exFAT, NTFS or ext4.
-- Copies a diagnostics report for compatibility issues, with the serial number masked.
-- Light and dark themes, keyboard shortcuts, and a command line tool for scripting.
+Unofficial, not affiliated with Western Digital. Use it on drives you own or administer. See [DISCLAIMER](docs/DISCLAIMER.md).
 
 ## Install
 
-### Option 1: .deb package (Debian, Ubuntu, Linux Mint, Pop!_OS)
+Download from the [latest release](https://github.com/TitasDas/wd-hdd-unlocker/releases/latest).
 
-1. Download `wd-hdd-unlocker_<version>_amd64.deb` and `SHA256SUMS.txt` from the [latest release](https://github.com/TitasDas/wd-hdd-unlocker/releases/latest).
-2. Check the download:
-   ```bash
-   sha256sum -c SHA256SUMS.txt --ignore-missing
-   ```
-3. Install it:
-   ```bash
-   sudo apt install ./wd-hdd-unlocker_*_amd64.deb
-   ```
-4. Launch **WD My Passport Linux Unlocker** from your app menu. Your desktop asks for your password once through polkit and the app starts with the privileges it needs.
-
-The package installs the app under `/usr/libexec/wd-hdd-unlocker`, a launcher at `/usr/bin/wd-hdd-unlocker`, a menu entry, an icon and a polkit policy. Remove it with `sudo apt remove wd-hdd-unlocker`.
-
-### Option 2: standalone binary (any x86_64 distro)
-
-1. Download `wd-hdd-unlocker-linux-x86_64` and `SHA256SUMS.txt` from the latest release and verify the checksum as above.
-2. Make it executable and run it with root privileges:
-   ```bash
-   chmod +x wd-hdd-unlocker-linux-x86_64
-   pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY ./wd-hdd-unlocker-linux-x86_64
-   ```
-   `sudo -E ./wd-hdd-unlocker-linux-x86_64` also works.
-
-Runtime requirements: `util-linux`, `udev`, `usbutils`, `parted`. Recommended: `udisks2` (safe power-off), `ntfs-3g`, `exfatprogs`.
-
-### Option 3: from source
+Debian, Ubuntu, Linux Mint, Pop!_OS:
 
 ```bash
-git clone https://github.com/TitasDas/wd-hdd-unlocker
-cd wd-hdd-unlocker
-python3 -m pip install -r requirements.txt
-./scripts/wd-security-launcher.sh          # run with pkexec/sudo
-./scripts/install-desktop-entry.sh         # optional: menu entry for this checkout
+sha256sum -c SHA256SUMS.txt --ignore-missing
+sudo apt install ./wd-hdd-unlocker_*_amd64.deb
 ```
 
-## Using it
+Then start **WD My Passport Linux Unlocker** from the app menu. Your desktop asks for your password once, the way it does for Disks or Software Updater.
 
-**Unlock.** Plug the drive in, open the app, type the password on the Unlock page and press Enter. The app checks the password with the drive, waits for the kernel to see the unlocked capacity, mounts the volume for your user and opens it in your file manager. If the drive stores a hint, it is shown above the password field.
+Any other x86_64 distro:
 
-**Copy files.** The volume is mounted under `/media/<you>/<label>` (or `/mnt/<label>` if that folder does not exist) with your user as owner. Use it like any other USB drive. For ext4 or other Linux filesystems the on-disk owner may still be root; select the volume and press "Give me write access" to change the owner of the top folder.
+```bash
+chmod +x wd-hdd-unlocker-linux-x86_64
+sudo -E ./wd-hdd-unlocker-linux-x86_64
+```
 
-**Eject and lock.** Press "Eject and lock" when you are done. The app unmounts the volumes and powers the USB device off. The drive is locked again and will ask for the password when you reconnect it. There is no separate "lock while connected" command in the WD protocol; WD Security behaves the same way.
+Needs `util-linux`, `udev`, `usbutils` and `parted`. `udisks2`, `ntfs-3g` and `exfatprogs` are recommended.
 
-**Set, change or remove the password.** On the Password page. Setting a password needs an unprotected drive, changing or removing it needs an unlocked one. Passwords are limited to 25 characters to stay compatible with WD Security.
+Want to see it first? `./wd-hdd-unlocker-linux-x86_64 --demo` runs the whole app against a pretend drive, no root needed.
 
-**Erase.** On the Advanced page, behind a typed confirmation. Resets the drive's data encryption key, which makes all data unreadable in an instant and removes the password. Use it when the password is lost. You can format the drive in the same step.
+## What you can do
 
-Keyboard: F5 refresh, Alt+U unlock, F1 about, Ctrl+Q quit.
+| | |
+| --- | --- |
+| ![Locked drive](assets/screenshot-light-drive-locked.png) | ![Password page](assets/screenshot-dark-security.png) |
+
+Unlock a drive with the password you set in WD Security. The hint stored on the drive is shown above the field.
+
+Copy files. Volumes are mounted under `/media/<you>/` with your user as owner, so the file manager and the terminal both work as they do for any USB stick.
+
+Eject and lock. The app unmounts the drive and cuts USB power. The drive relocks the moment it loses power, which is also how WD Security locks it.
+
+Set, change or remove the password, with a hint. The hint and hashing parameters are written to the drive in WD's own format, so the drive still opens with WD Security on Windows or a Mac.
+
+Format the drive as exFAT, NTFS or ext4 with a new name. The password stays.
+
+Erase a drive whose password is lost. This resets the encryption key, so every file becomes unreadable at once, then formats it if you want.
+
+Multiple WD drives attached? Pick one from the selector in the title bar. Something odd? The Activity page shows every command, and the Advanced page copies a diagnostics report with the serial number masked.
 
 ## Command line
 
-`app/wdctl.py` drives the same engine without Qt, for servers and scripts:
+`wdctl.py` runs the same engine without a desktop:
 
 ```bash
 sudo ./app/wdctl.py status
 sudo ./app/wdctl.py unlock
 sudo ./app/wdctl.py lock
 sudo ./app/wdctl.py set-password --hint "pet name"
-sudo ./app/wdctl.py change-password
-sudo ./app/wdctl.py remove-password
-sudo ./app/wdctl.py erase --format exfat --label "My Passport"
+sudo ./app/wdctl.py format --fs exfat --label "Backups"
+sudo ./app/wdctl.py erase
 ```
-
-Use `--device /dev/sdX` when more than one WD drive is attached.
 
 ## How it works
 
-WD Security drives take vendor-specific SCSI commands over USB: encryption status, unlock, change passphrase, reset key, and a small "handy store" for the hint and hashing parameters. The app sends them through the kernel's `SG_IO` interface (falling back to `sg_raw` if that is unavailable) to the enclosure services node the drive exposes, or to the disk node on bridges that only accept commands there.
+WD Security drives take a few vendor SCSI commands over USB: read status, unlock, change passphrase, reset key, and a small store for the hint and hashing parameters. The app sends them through the kernel's `SG_IO` interface to the node the drive answers on. The password is hashed exactly as WD Security does it (UTF-16LE of salt and password, SHA-256 a thousand times by default), so passwords set on one platform work on the other.
 
-The password is turned into the 32-byte key the drive expects the same way WD Security does: UTF-16LE of salt plus password, hashed with SHA-256 for the number of iterations stored on the drive (default salt `WDC.`, 1000 iterations). The command formats come from the community reference manual in [KenMacD/wdpassport-utils](https://github.com/KenMacD/wdpassport-utils) and were cross-checked against two independent implementations.
+The command formats come from the reference manual in [KenMacD/wdpassport-utils](https://github.com/KenMacD/wdpassport-utils) and were checked against two independent implementations. AES-128 drives are a best effort: WD's own software does not support them and their hashing is not public.
 
-AES-128 drives: WD's own software does not support them and the vendor password algorithm for them is not public. Unlocking those is a best effort.
+## Compatibility reports
 
-## Compatibility reporting
-
-USB bridge chips and firmware vary between models. If a drive shows as "Drive does not answer security commands", or unlock fails with an "Illegal Request" error, open the Advanced page, press "Copy diagnostics" and paste the report into a GitHub issue titled `Compatibility report: <model> on <distro>`. Serial numbers are masked in the report; check the pasted text for anything else you do not want to share.
-
-Suggested labels: `compatibility`, `model-support`, `unlock-failure`.
+USB bridges differ between models. If a drive shows as "does not answer security commands" or unlock fails with "Illegal Request", press "Copy diagnostics" on the Advanced page and paste it into a [new issue](https://github.com/TitasDas/wd-hdd-unlocker/issues/new?template=compatibility_report.md).
 
 ## Development
 
 ```bash
-python3 -m unittest discover -s tests -t . -v      # 67 unit tests, no hardware needed
-python3 app/wd-security.py --demo                  # the full UI against a simulated drive, no root
-python3 app/wd-security.py --demo --screenshots assets   # regenerate README screenshots
-./scripts/build-linux.sh                           # PyInstaller binary in dist/
-./scripts/build-deb.sh                             # .deb in dist/
+python3 -m pip install -r requirements.txt
+QT_QPA_PLATFORM=offscreen python3 -m unittest discover -s tests -t . -v   # 102 tests, no hardware
+python3 app/wd-security.py --demo                                         # UI against a simulated drive
+python3 app/wd-security.py --demo --screenshots assets                    # regenerate screenshots
+./scripts/build-linux.sh && ./scripts/build-deb.sh                        # binary and .deb in dist/
 ```
 
-Layout:
+`app/wdpassport/` holds the code: `protocol.py` (commands and hashing, pure functions), `transport.py` (SG_IO, sg_raw fallback), `devices.py` (udev, mounts, power), `manager.py` (the operations), `simulator.py` (fake drive for tests and demo) and `ui/` (PyQt5). `packaging/` has the desktop entry, polkit policy and launcher. A `v*` tag builds and publishes the release.
 
-- `app/wdpassport/protocol.py`: command blocks, response parsing, password hashing, handy store. Pure functions.
-- `app/wdpassport/transport.py`: SG_IO ioctl and sg_raw transports.
-- `app/wdpassport/devices.py`: udev, sysfs, lsblk, mount and power-off plumbing.
-- `app/wdpassport/manager.py`: the operations the UI and CLI call.
-- `app/wdpassport/simulator.py`: in-memory drive used by tests and `--demo`.
-- `app/wdpassport/ui/`: PyQt5 interface.
-- `packaging/`: desktop entry, polkit policy, launcher for the .deb.
+## Credits and legal
 
-Releases are built by the GitHub workflow on a `v*` tag: tests, binary, smoke test in demo mode, .deb, checksums.
+Based on [KenMacD/wdpassport-utils](https://github.com/KenMacD/wdpassport-utils) and its protocol notes, with password and erase handling informed by [0-duke/wdpassport-utils](https://github.com/0-duke/wdpassport-utils). GUI lineage includes work by [electronicsguy](https://github.com/electronicsguy).
 
-## Credits
+[NOTICE](NOTICE) · [LICENSE](LICENSE) · [TERMS](docs/TERMS.md) · [LEGAL_USE](docs/LEGAL_USE.md) · [TRADEMARKS](docs/TRADEMARKS.md) · [SECURITY](docs/SECURITY.md) · [SAFETY](docs/SAFETY.md) · [CHANGELOG](CHANGELOG.md)
 
-- Original upstream: https://github.com/KenMacD/wdpassport-utils (including the protocol reference manual)
-- Change password, erase and handy store handling informed by https://github.com/0-duke/wdpassport-utils
-- GUI lineage includes work by https://github.com/electronicsguy
-
-Core docs:
-- [NOTICE](NOTICE)
-- [LICENSE](LICENSE)
-- [TERMS](docs/TERMS.md)
-- [LEGAL_USE](docs/LEGAL_USE.md)
-- [TRADEMARKS](docs/TRADEMARKS.md)
-- [SECURITY](docs/SECURITY.md)
-- [CONTRIBUTING](docs/CONTRIBUTING.md)
-- [SAFETY](docs/SAFETY.md)
-- [RELEASE_CHECKLIST](docs/RELEASE_CHECKLIST.md)
-- [CHANGELOG](CHANGELOG.md)
-
-## Canary
 `CANARY:WDSU:20260320:R2B9K1`
