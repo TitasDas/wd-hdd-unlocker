@@ -125,6 +125,19 @@ SCENES = [
 ]
 XFADE = 0.6  # seconds
 
+# With narration, each scene must hold long enough for its spoken line. NARRATION_LENS
+# points at the <key>-lens.json the narration step writes (seconds per line, one per
+# scene). The mixer starts line 0 at 0.5 s and every later line 0.45 s after its scene
+# begins, so a scene needs its line plus that lead-in, the crossfade into the next
+# scene and a short breath: 1.3 s for the opening card, 1.6 s for the rest. Scenes
+# whose storyboard length already covers that keep it; the render loop rounds each
+# scene to whole frames.
+LENS = os.environ.get('NARRATION_LENS')
+if LENS:
+    lens = json.load(open(LENS))
+    assert len(lens) == len(SCENES), f'{len(lens)} narration lines for {len(SCENES)} scenes'
+    SCENES = [(kind, max(dur, lens[i] + (1.3 if i == 0 else 1.6)), args) for i, (kind, dur, args) in enumerate(SCENES)]
+
 
 def ease(t):
     return t * t * (3 - 2 * t)

@@ -5,14 +5,16 @@ usage: mix.py wd|fm|dd|rs
 import json, os, subprocess, sys
 import numpy as np, soundfile as sf
 
-HERE = os.path.dirname(os.path.abspath(__file__)); VO = os.path.join(HERE, '..', 'voice')
+HERE = os.path.dirname(os.path.abspath(__file__))
+# The narration folder holds scripts.json, <key>-NN.wav and <key>-lens.json (see the README).
+VO = os.environ.get('NARRATION_DIR', os.path.join(HERE, '..', 'voice'))
 key = sys.argv[1]
 S = json.load(open(f'{VO}/scripts.json'))[key]
 LENS = json.load(open(f'{VO}/{key}-lens.json'))
 SR = 24000
 
 def shown(t):
-    for a, b in (('W D', 'WD'), ('ex-fat', 'exFAT'), ('N T F S', 'NTFS'), ('ext four', 'ext4'), ('U S B', 'USB'), ('P D F', 'PDF')):
+    for a, b in (('W D', 'WD'), ('ex-fat', 'exFAT'), ('N T F S', 'NTFS'), ('ext four', 'ext4'), ('U S B', 'USB'), ('P D F', 'PDF'), ('livs', 'lives')):
         t = t.replace(a, b)
     return t
 
@@ -36,7 +38,7 @@ else:  # readstand: the existing video, its own music, narration at each chapter
     src = '~/work/software-shop-wd-unlocker/public/media/readstand/0.2.2/usage-demo.mp4'
     chapters = [0.0, 3.08, 15.2, 51.32, 72.48, 88.96, 105.28, 112.12, 126.0, 141.76, 154.2, 174.08, 187.64, 213.08]
     duration = float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', src]).decode())
-    offsets = [0.2, 5.9] + [c + 1.75 for c in chapters[2:13]] + [chapters[13] + 0.6]
+    offsets = [0.35, 7.79] + [c + 1.75 for c in chapters[2:13]] + [chapters[13] + 0.6]
     wd = os.path.join(HERE, 'rs')
 
 track = np.zeros(int((duration + 1) * SR), dtype=np.float32); cues = []
