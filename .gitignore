@@ -15,3 +15,4 @@ tools/walkthrough/*.jpg
 tools/walkthrough/*.txt
 tools/walkthrough/*.vtt
 tools/walkthrough/*.json
+.venv-walkthrough/

@@ -5,7 +5,9 @@ usage: mix.py wd|fm|dd|rs
 import json, os, subprocess, sys
 import numpy as np, soundfile as sf
 
-HERE = os.path.dirname(os.path.abspath(__file__)); VO = os.path.join(HERE, '..', 'voice')
+HERE = os.path.dirname(os.path.abspath(__file__))
+# The narration folder holds scripts.json, <key>-NN.wav and <key>-lens.json (see the README).
+VO = os.environ.get('NARRATION_DIR', os.path.join(HERE, '..', 'voice'))
 key = sys.argv[1]
 S = json.load(open(f'{VO}/scripts.json'))[key]
 LENS = json.load(open(f'{VO}/{key}-lens.json'))
