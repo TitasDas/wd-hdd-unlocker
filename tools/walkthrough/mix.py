@@ -35,7 +35,7 @@ elif key == 'dd':
     music, skip, frames = f'{wd}/wallpaper.mp3', 6, f'{wd}/frames'
     whoosh_at = T['cue_starts']
 else:  # readstand: the existing video, its own music, narration at each chapter
-    src = '~/work/software-shop-wd-unlocker/public/media/readstand/0.2.2/usage-demo.mp4'
+    src = os.environ.get('READSTAND_VIDEO', os.path.expanduser('~/work/software-shop-wd-unlocker/public/media/readstand/0.2.2/usage-demo.mp4'))
     chapters = [0.0, 3.08, 15.2, 51.32, 72.48, 88.96, 105.28, 112.12, 126.0, 141.76, 154.2, 174.08, 187.64, 213.08]
     duration = float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', src]).decode())
     offsets = [0.35, 7.79] + [c + 1.75 for c in chapters[2:13]] + [chapters[13] + 0.6]
@@ -72,7 +72,7 @@ else:
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anoisesrc=color=pink:amplitude=0.5:duration=0.6:sample_rate=44100', '-af',
                     'bandpass=f=800:width_type=o:w=1.4,afade=t=in:st=0:d=0.2,afade=t=out:st=0.25:d=0.35', f'{wd}/whoosh.wav'], check=True)
     ins = ['-i', music, '-i', f'{wd}/voice.wav']; fc = [f"[0:a]atrim=start={skip},asetpts=PTS-STARTPTS,volume=0.34,afade=t=in:st=0:d=1.5,afade=t=out:st={duration - 2.5:.2f}:d=2.5[m]",
-                                                       f"[1:a]aresample=44100,volume=1.25,asplit[v1][v2]", f"[m][v1]{duck}[md]"]
+                                                       "[1:a]aresample=44100,volume=1.25,asplit[v1][v2]", f"[m][v1]{duck}[md]"]
     mixin = '[md][v2]'
     for k, s in enumerate(whoosh_at):
         ins += ['-i', f'{wd}/whoosh.wav']; ms = int(s * 1000); fc.append(f"[{k + 2}:a]adelay={ms}|{ms},volume=0.16[w{k}]"); mixin += f'[w{k}]'
