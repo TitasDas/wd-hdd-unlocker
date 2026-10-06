@@ -2,8 +2,7 @@
 import os, sys, time
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'app'))
-from PyQt5.QtWidgets import QApplication, QDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 from wdpassport import protocol
 from wdpassport.manager import DriveManager
 from wdpassport.simulator import SimulatedSystem, SimulatedTransport

@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Mix the soundtrack with a short whoosh at every scene change and encode the video.
-# Run compose.py first (it writes frames/ and starts are derived from its storyboard).
+# Run compose.py first: it writes frames/ and timing.json, which holds the scene lengths.
 # Music: "Cipher" by Kevin MacLeod, CC BY 4.0, from
 #   https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cipher2.mp3
 set -euo pipefail
 cd "$(dirname "$0")"
 MUSIC="${1:-cipher.mp3}"
 [[ -f "$MUSIC" ]] || { echo "Download the track to $MUSIC first (see the comment above)." >&2; exit 1; }
+[[ -f timing.json ]] || { echo "Run compose.py first (timing.json missing)." >&2; exit 1; }
 DUR=$(python3 -c "
-durs=[3.2,4.0,4.6,4.0,3.6,3.4,4.0,3.4,3.6,3.6,3.2,3.2,3.6,4.6]; xf=0.6
+import json
+t=json.load(open('timing.json')); durs, xf = t['durs'], t['xfade']
 starts=[]; c=0.0
 for i,d in enumerate(durs):
     starts.append(c); c+=d-(xf if i<len(durs)-1 else 0)

@@ -36,9 +36,8 @@ def main(argv=None):
 
     os.environ.setdefault('QT_AUTO_SCREEN_SCALE_FACTOR', '1')
     from PyQt5.QtCore import QByteArray, Qt
-    from PyQt5.QtGui import QIcon, QPixmap
+    from PyQt5.QtGui import QIcon, QPainter, QPixmap
     from PyQt5.QtSvg import QSvgRenderer
-    from PyQt5.QtGui import QPainter
     from PyQt5.QtWidgets import QApplication
 
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)

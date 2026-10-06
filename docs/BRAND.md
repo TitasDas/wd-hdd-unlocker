@@ -2,9 +2,9 @@
 
 ## The mark
 
-A drive platter with a keyhole cut through it. The keyhole's slot runs out through the platter's edge, so the lock is open and the data is reachable. That is the whole product in one silhouette.
+A drive platter with a keyhole cut through it. The keyhole's slot runs out through the platter's edge, so the lock reads as open.
 
-Because the notch joins the keyhole to the outside, the shape is a single closed outline with no holes. It renders identically in every SVG engine, cuts cleanly as a stencil, and embosses.
+Because the notch joins the keyhole to the outside, the shape is one closed outline with no holes. It renders the same in every SVG engine and works as a stencil.
 
 ## Construction
 
@@ -14,10 +14,10 @@ The path is generated, not drawn: see `MARK_PATH` in `app/wdpassport/ui/icons.py
 
 ## Why this shape
 
-- One idea, two primitives. It survives being drawn from memory.
-- Reads at favicon size (`assets/brand/icon-16.png`) and in one colour.
-- Says "security" through the keyhole and "open" through the notch, without a padlock cliche or a hard-drive illustration.
-- Not derived from any WD mark. Nothing in it references the manufacturer.
+- It is two simple shapes, a circle and a keyhole, so it is easy to remember.
+- It reads at favicon size (`assets/brand/icon-16.png`) and in one colour.
+- The keyhole suggests security and the notch suggests open. It avoids the usual padlock or hard-drive drawing.
+- It is not derived from any WD mark.
 
 ## Colour
 

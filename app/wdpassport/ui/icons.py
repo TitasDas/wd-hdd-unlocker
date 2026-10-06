@@ -6,10 +6,8 @@ from PyQt5.QtSvg import QSvgRenderer
 
 _PATHS = {
     'drive': '<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="7" cy="12" r="1.2" fill="{c}" stroke="none"/><path d="M11 12h6"/>',
-    'lock': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     'unlock': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
     'key': '<circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H21M18 12v3M15 12v2"/>',
-    'shield': '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
     'warning': '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
     'list': '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1" fill="{c}" stroke="none"/><circle cx="4" cy="12" r="1" fill="{c}" stroke="none"/><circle cx="4" cy="18" r="1" fill="{c}" stroke="none"/>',
     'refresh': '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>',
@@ -20,7 +18,6 @@ _PATHS = {
     'info': '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
     'settings': '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     'copy': '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
-    'check': '<path d="M5 12l4 4L19 6"/>',
     'edit': '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 7l4 4"/>',
     'trash': '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
 }
@@ -35,11 +32,10 @@ def svg_markup(name, color, size=24):
             % (size, size, color, body))
 
 
-def pixmap(name, color, size=20, dpr=1.0):
-    key = (name, color, size, dpr)
+def _render(key, markup, size, dpr):
     if key in _cache:
         return _cache[key]
-    renderer = QSvgRenderer(QByteArray(svg_markup(name, color, size).encode('utf-8')))
+    renderer = QSvgRenderer(QByteArray(markup.encode('utf-8')))
     pm = QPixmap(int(size * dpr), int(size * dpr))
     pm.setDevicePixelRatio(dpr)
     pm.fill(Qt.transparent)
@@ -49,6 +45,10 @@ def pixmap(name, color, size=20, dpr=1.0):
     painter.end()
     _cache[key] = pm
     return pm
+
+
+def pixmap(name, color, size=20, dpr=1.0):
+    return _render((name, color, size, dpr), svg_markup(name, color, size), size, dpr)
 
 
 def icon(name, color, size=20, dpr=1.0):
@@ -67,19 +67,7 @@ def mark_svg(color, size=24):
 
 
 def mark_pixmap(color, size=24, dpr=1.0):
-    key = ('__mark__', color, size, dpr)
-    if key in _cache:
-        return _cache[key]
-    renderer = QSvgRenderer(QByteArray(mark_svg(color, size).encode('utf-8')))
-    pm = QPixmap(int(size * dpr), int(size * dpr))
-    pm.setDevicePixelRatio(dpr)
-    pm.fill(Qt.transparent)
-    painter = QPainter(pm)
-    painter.setRenderHint(QPainter.Antialiasing)
-    renderer.render(painter, QRectF(0, 0, size, size))
-    painter.end()
-    _cache[key] = pm
-    return pm
+    return _render(('__mark__', color, size, dpr), mark_svg(color, size), size, dpr)
 
 
 def app_icon_svg():

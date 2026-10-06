@@ -122,14 +122,14 @@ class PasswordField(QWidget):
         self.edit.setFocus()
 
 
-def label(text, name='bodyText', wrap=True):
+def label(text, name='bodyText'):
     lbl = QLabel(text)
     lbl.setObjectName(name)
-    lbl.setWordWrap(wrap)
+    lbl.setWordWrap(True)
     return lbl
 
 
-def hrow(*widgets, stretch_last=False):
+def hrow(*widgets):
     row = QHBoxLayout()
     row.setSpacing(8)
     for w in widgets:
@@ -137,6 +137,4 @@ def hrow(*widgets, stretch_last=False):
             row.addStretch(1)
         else:
             row.addWidget(w)
-    if stretch_last:
-        row.addStretch(1)
     return row

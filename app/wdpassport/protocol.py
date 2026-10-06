@@ -201,21 +201,18 @@ def build_change_password_param(length, old_blob=None, new_blob=None):
     """
     if old_blob is None and new_blob is None:
         raise ValueError('at least one of old_blob and new_blob is required')
-    flags = 0
-    if old_blob is not None:
-        if len(old_blob) != length:
-            raise ValueError('old password blob must be %d bytes' % length)
-        flags |= 0x10
+    if old_blob is not None and len(old_blob) != length:
+        raise ValueError('old password blob must be %d bytes' % length)
+    if new_blob is not None and len(new_blob) != length:
+        raise ValueError('new password blob must be %d bytes' % length)
+    if old_blob is None:
+        flags = 0x01
+    elif new_blob is None:
+        flags = 0x10
     else:
-        old_blob = bytes(length)
-    if new_blob is not None:
-        if len(new_blob) != length:
-            raise ValueError('new password blob must be %d bytes' % length)
-        flags |= 0x01
-    else:
-        new_blob = bytes(length)
-    if flags & 0x11 == 0x11:
-        flags &= 0xEE
+        flags = 0
+    old_blob = old_blob if old_blob is not None else bytes(length)
+    new_blob = new_blob if new_blob is not None else bytes(length)
     return bytes([0x45, 0, 0, flags, 0, 0]) + struct.pack('>H', length) + old_blob + new_blob
 
 

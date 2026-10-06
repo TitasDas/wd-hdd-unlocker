@@ -1,8 +1,8 @@
-"""Broadcast-style captions shared by the walkthrough videos.
+"""Captions shared by the walkthrough videos.
 
-A soft transparent scrim rises from the bottom edge; large white type sits on it
-with a gentle shadow, left-aligned on a fixed margin, wrapping to two lines.
-Each video passes its own typeface so they keep their own character.
+A dark gradient fades in from the bottom edge and white text with a soft shadow
+sits on it, left-aligned and wrapped to at most two lines. Each video passes in
+its own font.
 """
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -43,7 +43,7 @@ def caption(img, text, font, alpha=1.0, margin=72, bottom=64, accent=None, line_
     base = img.convert('RGBA')
     sc = scrim(w, h)
     if scrim_from_x:
-        # keep the left of the frame clear (e.g. a menu lives there), with a soft horizontal fade in
+        # keep the left of the frame clear (a menu lives there) and fade the scrim in from that edge
         sc = sc.copy(); a = sc.getchannel('A'); fade = Image.new('L', (w, h), 255); fd = ImageDraw.Draw(fade)
         for x in range(0, scrim_from_x):
             fd.line((x, 0, x, h), fill=int(255 * max(0, (x - scrim_from_x + 120) / 120)))

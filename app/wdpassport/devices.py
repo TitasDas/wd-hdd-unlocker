@@ -138,13 +138,13 @@ class Drive:
 def human_size(n):
     if not n:
         return '0 B'
-    units = ['B', 'KB', 'MB', 'GB', 'TB']
+    if n < 1000:
+        return '%d B' % n
     value = float(n)
-    for unit in units:
-        if value < 1000 or unit == units[-1]:
-            return ('%.1f %s' % (value, unit)) if unit not in ('B',) else ('%d %s' % (value, unit))
+    for unit in ('KB', 'MB', 'GB', 'TB'):
         value /= 1000.0
-    return '%d B' % n
+        if value < 1000 or unit == 'TB':
+            return '%.1f %s' % (value, unit)
 
 
 def wd_usb_present():

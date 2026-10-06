@@ -1,70 +1,54 @@
-## 1) Linux exposes hardware through multiple interfaces
-- One physical drive can appear as `/dev/sdX` and `/dev/sgX`.
-- They are different interfaces, not duplicates.
-- A command may fail on one and work on the other.
+# Linux hardware tooling: notes from this project
 
-## 2) Live system state beats logs
-- `dmesg` is historical context, not a current source of truth.
-- For runtime decisions, prefer `sysfs` and `udev`.
-- Rule: detect from live files in `/sys`, not old kernel messages.
+## One drive, several device nodes
 
-## 3) Device identity must be explicit
-- Use udev properties (`ID_PATH`, model/product IDs) to map the right endpoint.
-- "Looks similar" is not enough when multiple USB devices exist.
-- If ambiguous, stop and warn instead of guessing.
+A single USB drive shows up as `/dev/sdX` (block device) and as one or more `/dev/sgX` (SCSI generic). They are different interfaces to the same hardware. A vendor command can fail on one and work on another, so the app tries each candidate.
 
-## 4) SCSI errors are protocol-level signals
-- `Check Condition` and `Illegal Request` come from device firmware.
-- That usually means command-path mismatch, unsupported behavior, or key/password mismatch.
-- It is often not a UI bug.
+## Read live state, not old logs
 
-## 5) Root context changes behavior
-- Storage unlock/mount operations often require elevated privileges.
-- Root-run GUI in user sessions can produce environment warnings.
-- Warnings are not always fatal, but they matter for reliability and UX.
+`dmesg` tells you what happened. `/sys` and udev tell you what is true now. Make runtime decisions from `/sys` and `udevadm`, and use kernel logs for debugging.
 
-## 6) Mount success needs verification
-- “Mounted” is not enough.
-- Verify actual target path with `findmnt` and filesystem checks.
-- Recover from invalid automount targets by remounting to a known safe path.
+## Match devices by identity
 
-## 7) Good Linux tools are observable
-- Log candidate selection, command path, and exact failure reason.
-- Generic “failed” messages slow debugging.
-- Good logs turn support into engineering.
+Use udev properties such as `ID_PATH` and the USB vendor and product IDs to pair a disk with its control node. Two devices that look alike are not proof. If the match is ambiguous, stop and warn rather than guess.
 
-## 8) Test strategy for system tools
-- Unit-test deterministic logic (detection, mapping, state transitions).
-- Simulate command outputs for failure/success paths.
-- Keep real hardware tests as a separate final validation step.
+## SCSI errors come from the device
 
-## 9) Maintainability is part of Linux engineering
-- Keep clear repo boundaries: `app/`, `scripts/`, `docs/`, `tests/`.
-- Keep command entrypoints stable when refactoring.
-- Standardized issue templates improve triage quality.
+`Check Condition` and `Illegal Request` are answers from the drive's firmware. They usually mean the command went to the wrong node, the bridge does not support it, or the password was wrong. They are rarely a UI bug.
 
-## 10) Privacy hygiene matters in OSS
-- Don’t commit local logs.
-- Don’t leak personal paths/serials in fixtures or docs.
-- Ask users to redact sensitive fields in reports.
+## Root changes the environment
 
-## Linux References
+Unlock and mount need root. A GUI started as root inside a user session prints warnings (for example about `XDG_RUNTIME_DIR`). Most are harmless, but they can affect file dialogs and opening folders as the desktop user.
+
+## Check that a mount worked
+
+A zero exit code from `mount` is not enough. Confirm the target with `findmnt` and check the filesystem. If the desktop automounted somewhere unexpected, remount to a known path.
+
+## Log enough to debug from a report
+
+Log which node was chosen, which transport ran the command, and the decoded sense data on failure. "Failed" on its own forces a second round trip with the user.
+
+## Testing system tools
+
+Unit-test the deterministic parts: detection, node mapping and state transitions. Feed recorded command output in to cover failure paths. Keep real-hardware testing as a final manual step.
+
+## Repo layout
+
+Keep `app/`, `scripts/`, `docs/` and `tests/` separate. Keep entry points stable across refactors so launchers and docs do not break. An issue template gets you usable bug reports.
+
+## Privacy in public repos
+
+Do not commit local logs. Keep personal paths and serial numbers out of fixtures and docs. Ask reporters to redact anything sensitive.
+
+## References
+
+Linux:
 - Kernel SCSI docs: https://docs.kernel.org/scsi/
 - Sysfs overview: https://docs.kernel.org/filesystems/sysfs.html
-- udev man page: `man 7 udev`
-- udevadm man page: `man 8 udevadm`
-- lsblk man page: `man 8 lsblk`
-- findmnt man page: `man 8 findmnt`
-- mount man page: `man 8 mount`
-- sg_raw man page: `man 8 sg_raw`
+- `man 7 udev`, `man 8 udevadm`, `man 8 lsblk`, `man 8 findmnt`, `man 8 mount`, `man 8 sg_raw`
 
-## Linux Desktop/UI Design References
+Desktop and UI:
 - GNOME Human Interface Guidelines: https://developer.gnome.org/hig/
 - KDE Human Interface Guidelines: https://develop.kde.org/hig/
 - freedesktop Desktop Entry Spec: https://specifications.freedesktop.org/desktop-entry-spec/latest/
 - freedesktop Icon Theme Spec: https://specifications.freedesktop.org/icon-theme-spec/latest/
-
-## Mindset based takeaway
-- Treat Linux app + hardware work as systems engineering.
-- Prefer correctness and observability over clever shortcuts.
-- Build safe defaults first, then optimize UX.
