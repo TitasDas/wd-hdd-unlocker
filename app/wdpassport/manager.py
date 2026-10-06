@@ -88,11 +88,9 @@ class DriveManager:
         drive = self.system.describe_drive(state.drive.disk)
         if state.drive.control_node:
             drive.control_node = state.drive.control_node
-            if drive.control_node not in drive.sg_candidates:
-                drive.sg_candidates.insert(0, drive.control_node)
-            else:
+            if drive.control_node in drive.sg_candidates:
                 drive.sg_candidates.remove(drive.control_node)
-                drive.sg_candidates.insert(0, drive.control_node)
+            drive.sg_candidates.insert(0, drive.control_node)
         return self.probe(drive)
 
     def status(self, drive):
@@ -226,7 +224,7 @@ class DriveManager:
             how = self.system.power_off(drive, self.log)
         except (RuntimeError, OSError) as exc:
             raise OperationError('Unmounted, but could not power the drive off: %s. Unplug it to lock it.' % exc)
-        self.log('Drive powered off via %s. It is locked again; unplug and reconnect it to use it.' % how)
+        self.log('Drive powered off via %s. It only locks once it loses power, and some USB ports keep power on, so unplug it to be sure.' % how)
 
     # --- password management ------------------------------------------------------
 

@@ -49,7 +49,7 @@ def main(argv=None):
     sub.add_parser('status', help='show security status and hint')
     sub.add_parser('unlock', help='unlock and mount')
     sub.add_parser('mount', help='mount an unlocked drive for the desktop user')
-    sub.add_parser('lock', help='unmount, power off and relock')
+    sub.add_parser('lock', help='unmount and power off; unplug afterwards to be sure it locks')
     p = sub.add_parser('set-password', help='turn on password protection')
     p.add_argument('--hint', default='')
     p = sub.add_parser('change-password', help='change the password (drive must be unlocked)')
@@ -90,7 +90,7 @@ def main(argv=None):
             print('Mounted at: ' + ', '.join(manager.mount(state)))
         elif args.cmd == 'lock':
             manager.eject_and_lock(state)
-            print('Drive ejected and locked. Reconnect it to use it again.')
+            print('Drive ejected. Unplug it to be sure it is locked.')
         elif args.cmd == 'set-password':
             manager.set_password(state, ask('New password: ', confirm=True), args.hint)
             print('Password set.')

@@ -49,7 +49,7 @@ Unlock a drive with the password you set in WD Security. The hint stored on the 
 
 Copy files. Volumes are mounted under `/media/<you>/` with your user as owner, so the file manager and the terminal both work as they do for any USB stick.
 
-Eject and lock. The app unmounts the drive and cuts USB power. The drive relocks the moment it loses power, which is also how WD Security locks it.
+Eject. The app unmounts the drive and asks Linux to power it off. The drive only locks again when it actually loses power, which is also how WD Security locks it. Many USB ports keep supplying power after a software power-off, and on those the drive stays unlocked until you unplug it. Unplug it to be sure.
 
 Set, change or remove the password, with a hint. The hint and hashing parameters are written to the drive in WD's own format, so the drive still opens with WD Security on Windows or a Mac.
 

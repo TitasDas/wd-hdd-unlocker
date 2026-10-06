@@ -3,7 +3,7 @@
 Output: frames/NNNNN.png at 25 fps, 1280x960 (matches the storefront player),
 plus usage-demo.vtt, usage-demo-transcript.txt and chapters.json.
 """
-import json, math, os, shutil, sys
+import json, os, shutil, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import captions as CAP
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -120,7 +120,7 @@ SCENES = [
     ('app', 3.6, dict(cap='10-erase-dialog', dialog='10-erase-dialog-dialog', zoom=(1.05, 1.1), focus=(0.5, 0.5), caption='Lost the password? Erase the drive and start again.')),
     ('app', 3.6, dict(cap='11-activity', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Every step is logged, in case you need help.')),
     ('app', 3.4, dict(cap='12-drive-dark', zoom=(1.0, 1.06), focus=(0.5, 0.4), caption='Light or dark, with keyboard shortcuts.')),
-    ('app', 3.6, dict(cap='13-ejected', zoom=(1.0, 1.05), focus=(0.5, 0.2), caption='Eject, and the drive locks itself.')),
+    ('app', 3.6, dict(cap='13-ejected', zoom=(1.0, 1.05), focus=(0.5, 0.2), caption='Eject, then unplug to lock it.')),
     ('card', 4.6, dict(lines=['Free. Open source.'], sub=['Get the .deb or the standalone binary', 'at implantintelligence.com'], small='Unofficial. Not affiliated with Western Digital. Use only on drives you own.')),
 ]
 XFADE = 0.6  # seconds

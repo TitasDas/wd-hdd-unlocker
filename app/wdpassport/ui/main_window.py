@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
 )
 
 from .. import APP_NAME, VERSION, protocol
-from ..devices import human_size, which
+from ..devices import POSIX_FS, human_size, which
 from ..manager import OperationError
 from . import icons, theme
 from .dialogs import (
@@ -328,8 +328,8 @@ class MainWindow(QMainWindow):
 
         tips = Card('What happens next', 'The password is hashed the same way WD Security does it and sent to the '
                     'drive over USB. On success the volumes are mounted for your user and the folder opens in '
-                    'your file manager. The drive locks itself again when it loses power, so use "Eject and lock" '
-                    'when you are done.')
+                    'your file manager. The drive locks again only when it loses power, so when you are done '
+                    'use "Eject and lock" and then unplug it.')
         layout.addWidget(tips)
         layout.addStretch(1)
         return area
@@ -653,9 +653,8 @@ class MainWindow(QMainWindow):
         self.act_mount.setEnabled(ok)
         self.act_open.setEnabled(mounted)
         self.act_eject.setEnabled(ok)
-        self.act_write.setEnabled(mounted and self._selected_partition() is not None
-                                  and (self._selected_partition().fstype or '').lower() in
-                                  ('ext2', 'ext3', 'ext4', 'btrfs', 'xfs', 'f2fs'))
+        part = self._selected_partition()
+        self.act_write.setEnabled(mounted and part is not None and (part.fstype or '').lower() in POSIX_FS)
         self.unlock_pw.setEnabled(ok and s.security == protocol.STATUS_LOCKED)
         self.unlock_btn.setEnabled(ok and s.security == protocol.STATUS_LOCKED and bool(self.unlock_pw.text()))
         self.set_card.setVisible(bool(s and s.security == protocol.STATUS_NOT_PROTECTED) or s is None)
@@ -666,8 +665,6 @@ class MainWindow(QMainWindow):
         self.remove_btn.setEnabled(bool(ok and s.is_unlocked))
         self.erase_btn.setEnabled(ok)
         self.format_btn.setEnabled(accessible)
-        for key in ('unlock', 'security', 'advanced'):
-            self.nav_buttons[key].setEnabled(True)
 
     def _selected_partition(self):
         if self.current is None:
@@ -718,8 +715,8 @@ class MainWindow(QMainWindow):
             return
         d = self.current.drive
         if not confirm(self, 'Eject and lock',
-                       'Unmount %s and power it off? It relocks the moment it loses power. '
-                       'Unplug and reconnect it to use it again.' % d.display_name, 'Eject and lock'):
+                       'Unmount %s and power it off? It only locks once it loses power, so unplug it '
+                       'afterwards to be sure.' % d.display_name, 'Eject and lock'):
             return
         self.run_async(self.manager.eject_and_lock, self.current, on_done=lambda _: self.refresh(), busy_text='Ejecting')
 

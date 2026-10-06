@@ -48,7 +48,7 @@ Description: Unlock, mount and manage WD My Passport drives on Linux
  Unofficial desktop utility for WD My Passport, My Passport Ultra, easystore
  and Elements drives that use WD Security. Unlocks the drive with its
  password, mounts it for the logged-in user, sets, changes or removes the
- password, safely ejects (which relocks the drive) and can erase it.
+ password, safely ejects it and can erase it.
  .
  Not affiliated with or endorsed by Western Digital.
 CONTROL
